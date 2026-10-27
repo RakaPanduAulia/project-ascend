@@ -225,3 +225,77 @@ body {
   font-size: 13px;
   text-align: center;
 }
+
+/* ===================================================================== */
+/*  TAHAP 4 — Poles tampilan & animasi                                   */
+/* ===================================================================== */
+
+/* Efek "pop" pas misi dicentang */
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.mission.just-checked {
+  animation: pop 0.3s ease;
+  border-color: #1f47e8;
+  box-shadow: 0 0 14px rgba(31, 71, 232, 0.4);
+}
+
+/* Kartu misi: bayangan lembut + transisi lebih halus */
+.mission {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s, opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.mission:hover {
+  transform: translateY(-1px);
+}
+
+/* Overlay "LEVEL UP!" yang muncul sebentar di tengah layar */
+.levelup-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 50;
+}
+.levelup-overlay.show {
+  animation: levelup 1.4s ease forwards;
+}
+.levelup-overlay .text {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #1f47e8;
+  text-shadow: 0 0 30px rgba(31, 71, 232, 0.9);
+}
+@keyframes levelup {
+  0%   { opacity: 0; transform: scale(0.7); }
+  25%  { opacity: 1; transform: scale(1.1); }
+  70%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* EXP bar sedikit berdenyut pas penuh (dekat naik level) */
+.exp-fill.glow {
+  animation: expglow 1s ease-in-out infinite alternate;
+}
+@keyframes expglow {
+  from { box-shadow: 0 0 10px rgba(31, 71, 232, 0.5); }
+  to   { box-shadow: 0 0 22px rgba(31, 71, 232, 1); }
+}
+
+/* Hormati setting "kurangi gerak" di OS: matikan semua animasi */
+@media (prefers-reduced-motion: reduce) {
+  .mission.just-checked,
+  .levelup-overlay.show,
+  .exp-fill.glow {
+    animation: none;
+  }
+  .mission:hover {
+    transform: none;
+  }
+}
