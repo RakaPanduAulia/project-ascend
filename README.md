@@ -5,7 +5,8 @@ App glow-up gamifikasi — papan misi harian ala RPG. Centang misi, EXP naik, (n
 Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 
 ## Status
-- **Tahap 1 (sekarang):** papan misi + EXP bar, disimpan di browser (localStorage).
+- **Tahap 1:** papan misi + EXP bar, disimpan di browser (localStorage).
+- **Tahap 2 (sekarang):** tambah 4 stat (Body / Mind / Looks / Discipline) yang naik-turun sesuai misi.
 
 ## Cara buka
 Buka `index.html` di browser. Gak perlu install apa-apa.
