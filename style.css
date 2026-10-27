@@ -365,3 +365,83 @@ body {
     transform: none;
   }
 }
+
+/* ===== Achievements ===== */
+.ach-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.ach-count {
+  font-size: 13px;
+  color: #4d6bff;
+  font-weight: 600;
+}
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.badge {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #0d1428;
+  border: 1px solid #16233f;
+  border-radius: 12px;
+  text-align: center;
+  padding: 6px;
+}
+.badge .badge-icon {
+  font-size: 26px;
+  opacity: 0.35;
+}
+.badge .badge-name {
+  font-size: 9px;
+  opacity: 0.7;
+  line-height: 1.1;
+}
+.badge.unlocked {
+  background: linear-gradient(135deg, #0f1733, #15204a);
+  border-color: #1f47e8;
+  box-shadow: 0 0 12px rgba(31, 71, 232, 0.35);
+}
+.badge.unlocked .badge-icon {
+  opacity: 1;
+}
+.badge.unlocked .badge-name {
+  opacity: 0.95;
+  color: #9fb2ff;
+}
+
+/* Toast notifikasi achievement */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: #0f1733;
+  border: 1px solid #1f47e8;
+  box-shadow: 0 0 20px rgba(31, 71, 232, 0.5);
+  color: #e8eaf4;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 60;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: opacity 0.3s;
+  }
+}

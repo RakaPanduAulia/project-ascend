@@ -1,8 +1,7 @@
 // =====================================================================
-//  ASCEND — Tahap 3
-//  Papan misi + EXP + LEVEL + STAT + RIWAYAT + STREAK + Day X/66.
-//  Centang misi -> EXP & stat naik. Tiap ganti hari, hari kemarin
-//  disimpan ke riwayat dan streak dihitung. Semua awet di browser.
+//  ASCEND — Tahap 5
+//  Papan misi + EXP + LEVEL + STAT + RIWAYAT + STREAK + Day X/66
+//  + ACHIEVEMENT (lencana yang ke-unlock pas capai milestone).
 // =====================================================================
 
 
@@ -38,6 +37,37 @@ const STAT_INFO = [
 
 
 // ---------------------------------------------------------------------
+//  1b) DAFTAR ACHIEVEMENT
+//  Tiap badge punya:
+//    id    = penanda unik
+//    icon  = emoji lencana
+//    name  = judul
+//    desc  = syarat (teks buat user)
+//    cek   = fungsi yang nerima 'state' dan balik true kalau syarat tercapai
+//  Pola 'cek(state)' ini fleksibel: nambah badge baru = nambah 1 baris,
+//  gak perlu ubah logika pengecekannya.
+// ---------------------------------------------------------------------
+const ACHIEVEMENTS = [
+  { id: "first_step", icon: "👟", name: "Langkah Pertama", desc: "Selesaikan 1 misi pertama",
+    cek: s => totalMisiSepanjangMasa(s) >= 1 },
+  { id: "level5", icon: "⭐", name: "Pendaki", desc: "Capai Level 5",
+    cek: s => s.level >= 5 },
+  { id: "streak7", icon: "🔥", name: "Seminggu Nyala", desc: "Streak 7 hari",
+    cek: s => s.streak >= 7 },
+  { id: "streak30", icon: "🌋", name: "Sebulan Tak Padam", desc: "Streak 30 hari",
+    cek: s => s.streak >= 30 },
+  { id: "body80", icon: "💪", name: "Raga Prima", desc: "Body capai 80",
+    cek: s => s.stats.body >= 80 },
+  { id: "mind80", icon: "🧠", name: "Pikiran Tajam", desc: "Mind capai 80",
+    cek: s => s.stats.mind >= 80 },
+  { id: "perfect_day", icon: "🏆", name: "Hari Sempurna", desc: "Selesaikan SEMUA misi dalam sehari",
+    cek: s => s.done.length >= MISSIONS.length },
+  { id: "day66", icon: "👑", name: "66 Hari", desc: "Bertahan sampai Day 66",
+    cek: s => dayNumber() >= 66 },
+];
+
+
+// ---------------------------------------------------------------------
 //  2) STATE (keadaan sekarang)
 //  Tambahan Tahap 3:
 //    startDate = tanggal pertama pakai app (buat hitung "Day X/66")
@@ -53,7 +83,19 @@ let state = {
   startDate: today(),
   streak: 0,
   history: [],
+  unlocked: [],   // id achievement yang sudah kebuka
+  totalDone: 0,   // total misi kelar sepanjang masa (buat badge "Langkah Pertama")
 };
+
+
+// ---------------------------------------------------------------------
+//  1c) totalMisiSepanjangMasa(s)  — total misi kelar seumur hidup app.
+//  'totalDone' saja gak cukup kalau badge dicek pas belum nambah; jadi
+//  kita jumlahkan juga yang kelar HARI INI.
+// ---------------------------------------------------------------------
+function totalMisiSepanjangMasa(s) {
+  return s.totalDone;
+}
 
 
 // ---------------------------------------------------------------------
@@ -89,6 +131,8 @@ function load() {
   if (!state.startDate) state.startDate = state.date || today();
   if (state.streak === undefined) state.streak = 0;
   if (!state.history)   state.history = [];
+  if (!state.unlocked)  state.unlocked = [];
+  if (state.totalDone === undefined) state.totalDone = 0;
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -187,6 +231,7 @@ function toggleMission(id) {
     applyStats(mission.stats, -1);
   } else {
     state.done.push(id);
+    state.totalDone += 1; // hitung total misi kelar sepanjang masa
     naikLevel = addExp(mission.exp); // simpan apakah naik level
     applyStats(mission.stats, +1);
   }
@@ -300,6 +345,61 @@ function render() {
   }
 
   renderHistory();
+  checkAchievements();
+  renderAchievements();
+}
+
+
+// ---------------------------------------------------------------------
+//  8d) checkAchievements()
+//  Cek tiap badge: kalau syaratnya tercapai dan BELUM kebuka, buka
+//  (masukkan id ke state.unlocked) lalu tampilkan notifikasi kecil.
+// ---------------------------------------------------------------------
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    const sudahKebuka = state.unlocked.includes(a.id);
+    if (!sudahKebuka && a.cek(state)) {
+      state.unlocked.push(a.id);
+      save();
+      toastAchievement(a); // kasih tau user
+    }
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  8e) renderAchievements()
+//  Gambar grid lencana. Yang kebuka: warna + ikon. Yang belum: abu + "?".
+// ---------------------------------------------------------------------
+function renderAchievements() {
+  const box = document.getElementById("achievement-grid");
+  box.innerHTML = "";
+
+  const jumlahKebuka = state.unlocked.length;
+  document.getElementById("achievement-count").textContent =
+    jumlahKebuka + " / " + ACHIEVEMENTS.length;
+
+  ACHIEVEMENTS.forEach(a => {
+    const kebuka = state.unlocked.includes(a.id);
+    const cell = document.createElement("div");
+    cell.className = "badge" + (kebuka ? " unlocked" : "");
+    cell.title = kebuka ? a.name + " — " + a.desc : "Terkunci: " + a.desc;
+    cell.innerHTML = kebuka
+      ? `<div class="badge-icon">${a.icon}</div><div class="badge-name">${a.name}</div>`
+      : `<div class="badge-icon">?</div>`;
+    box.appendChild(cell);
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  8f) toastAchievement(a)  — notifikasi kecil pas badge kebuka.
+// ---------------------------------------------------------------------
+function toastAchievement(a) {
+  const toast = document.getElementById("toast");
+  toast.innerHTML = `${a.icon} Achievement: <b>${a.name}</b>`;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
 
