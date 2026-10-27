@@ -9,9 +9,16 @@
 <body>
   <div class="app">
 
-    <!-- Header: nama app + level + EXP bar -->
+    <!-- Header: nama app + Day counter + streak + level + EXP bar -->
     <header class="header">
-      <div class="brand">ASCEND</div>
+      <div class="top-bar">
+        <div class="brand">ASCEND</div>
+        <div class="streak-chip" id="streak-label">🔥 0</div>
+      </div>
+      <div class="day-counter">
+        <span id="day-label">DAY 1</span>
+        <span id="day-total">/ 66</span>
+      </div>
       <div class="level-row">
         <span id="level-label">Lv. 1</span>
         <span id="exp-label">0 / 100 EXP</span>
@@ -32,6 +39,10 @@
 
     <!-- Pesan motivasi -->
     <div class="pep-talk" id="pep-talk"></div>
+
+    <!-- Riwayat hari-hari sebelumnya -->
+    <h2 class="day-title" style="margin-top:28px;">📒 Riwayat</h2>
+    <div class="history-list" id="history-list"></div>
 
   </div>
 

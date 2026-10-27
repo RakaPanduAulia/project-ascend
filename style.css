@@ -25,13 +25,41 @@ body {
   margin-bottom: 24px;
 }
 
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.streak-chip {
+  background: #0b1a4d;
+  border: 1px solid #1a3a8a;
+  color: #ff7a3a;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.day-counter {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.day-counter #day-total {
+  font-size: 15px;
+  opacity: 0.5;
+  margin-left: 4px;
+}
+
 .brand {
   font-size: 34px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #1f47e8;
   text-shadow: 0 0 18px rgba(31, 71, 232, 0.5);
-  margin-bottom: 14px;
 }
 
 .level-row {
@@ -163,4 +191,37 @@ body {
   border: 1px solid rgba(31, 71, 232, 0.25);
   font-size: 13px;
   line-height: 1.5;
+}
+
+/* ===== Riwayat ===== */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.history-date {
+  opacity: 0.8;
+}
+
+.history-count {
+  color: #4d6bff;
+  font-weight: 600;
+}
+
+.history-empty {
+  padding: 14px;
+  opacity: 0.6;
+  font-size: 13px;
+  text-align: center;
 }
