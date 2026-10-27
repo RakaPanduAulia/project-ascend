@@ -145,13 +145,16 @@ function dayNumber() {
 
 // ---------------------------------------------------------------------
 //  6) addExp(amount)  — tambah EXP, naik level kalau cukup.
+//  Mengembalikan 'true' kalau SEMPAT naik level (buat memicu animasi).
 // ---------------------------------------------------------------------
 function addExp(amount) {
+  const levelAwal = state.level;
   state.exp += amount;
   while (state.exp >= expNeeded(state.level)) {
     state.exp -= expNeeded(state.level);
     state.level += 1;
   }
+  return state.level > levelAwal; // true kalau naik level
 }
 
 
@@ -176,6 +179,7 @@ function applyStats(stats, arah) {
 function toggleMission(id) {
   const mission = MISSIONS.find(m => m.id === id);
   const sudahSelesai = state.done.includes(id);
+  let naikLevel = false;
 
   if (sudahSelesai) {
     state.done = state.done.filter(x => x !== id);
@@ -183,7 +187,7 @@ function toggleMission(id) {
     applyStats(mission.stats, -1);
   } else {
     state.done.push(id);
-    addExp(mission.exp);
+    naikLevel = addExp(mission.exp); // simpan apakah naik level
     applyStats(mission.stats, +1);
   }
 
@@ -192,6 +196,53 @@ function toggleMission(id) {
 
   save();
   render();
+
+  // Animasi: efek "pop" di kartu yang barusan dicentang.
+  if (!sudahSelesai) animatePop(id);
+  // Animasi: overlay "LEVEL UP!" kalau tadi naik level.
+  if (naikLevel) animateLevelUp();
+}
+
+
+// ---------------------------------------------------------------------
+//  7b) animatePop(id) & animateLevelUp()
+//  Kasih kelas CSS sebentar lalu dicabut, biar animasinya jalan sekali.
+// ---------------------------------------------------------------------
+function animatePop(id) {
+  // Cari kartu misi yang baru dicentang lewat data-id-nya.
+  const card = document.querySelector(`.mission[data-id="${id}"]`);
+  if (!card) return;
+  card.classList.add("just-checked");
+  setTimeout(() => card.classList.remove("just-checked"), 300);
+}
+
+function animateLevelUp() {
+  const overlay = document.getElementById("levelup");
+  const sub = document.getElementById("levelup-sub");
+  const burst = document.getElementById("burst");
+
+  // Tampilkan level baru di bawah teks.
+  sub.textContent = "Lv. " + state.level;
+
+  // Buat 14 partikel kilau yang menyebar ke segala arah.
+  burst.innerHTML = "";
+  const jumlah = 14;
+  for (let i = 0; i < jumlah; i++) {
+    const spark = document.createElement("div");
+    spark.className = "spark";
+    // Sudut merata melingkar, jarak acak 60–140px.
+    const sudut = (i / jumlah) * Math.PI * 2;
+    const jarak = 60 + Math.random() * 80;
+    spark.style.setProperty("--dx", Math.cos(sudut) * jarak + "px");
+    spark.style.setProperty("--dy", Math.sin(sudut) * jarak + "px");
+    burst.appendChild(spark);
+  }
+
+  // Jalankan animasi: kasih kelas 'show', cabut setelah selesai.
+  overlay.classList.remove("show"); // reset dulu kalau masih nyala
+  void overlay.offsetWidth;          // trik: paksa browser "mulai ulang" animasi
+  overlay.classList.add("show");
+  setTimeout(() => overlay.classList.remove("show"), 1600);
 }
 
 
@@ -209,7 +260,14 @@ function render() {
     state.exp + " / " + expNeeded(state.level) + " EXP";
 
   const persen = (state.exp / expNeeded(state.level)) * 100;
-  document.getElementById("exp-fill").style.width = persen + "%";
+  const expFill = document.getElementById("exp-fill");
+  expFill.style.width = persen + "%";
+  // Berdenyut kalau EXP sudah >= 80% (hampir naik level).
+  if (persen >= 80) {
+    expFill.classList.add("glow");
+  } else {
+    expFill.classList.remove("glow");
+  }
 
   renderStats();
 
@@ -220,6 +278,7 @@ function render() {
     const selesai = state.done.includes(mission.id);
     const card = document.createElement("div");
     card.className = "mission" + (selesai ? " done" : "");
+    card.setAttribute("data-id", mission.id);
     card.innerHTML = `
       <div class="check">${selesai ? "✓" : ""}</div>
       <div class="name">${mission.name}</div>
