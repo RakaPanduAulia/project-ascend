@@ -25,6 +25,10 @@ const MISSIONS = [
   { id: "inggris",   name: "🇬🇧 Belajar Inggris ~15 menit", exp: 12, stats: { mind: 3 } },
   { id: "build",     name: "💻 Ngoding app 30 menit",      exp: 15, stats: { mind: 3, discipline: 2 } },
   { id: "tidur",     name: "😴 Tidur ≥ 7 jam",             exp: 10, stats: { body: 2, mind: 1 } },
+
+  // ⚠️ MISI TEST — SEMENTARA. Buat nyoba animasi LEVEL UP (EXP 100 = langsung naik level).
+  //    Hapus baris ini kalau sudah selesai testing.
+  { id: "__test_levelup", name: "⚡ [TEST] Picu Level Up (+100)", exp: 100, stats: { discipline: 1 } },
 ];
 
 
