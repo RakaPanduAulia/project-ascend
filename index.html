@@ -44,11 +44,19 @@
     <h2 class="day-title" style="margin-top:28px;">📒 Riwayat</h2>
     <div class="history-list" id="history-list"></div>
 
+    <!-- Tombol reset: balikin ke Level 1 buat testing -->
+    <button class="reset-btn" id="reset-btn">🔄 Reset ke Level 1</button>
+
   </div>
 
-  <!-- Overlay animasi "LEVEL UP!" (disembunyikan, muncul pas naik level) -->
+  <!-- Overlay animasi "LEVEL UP!" yang lebih wah -->
   <div class="levelup-overlay" id="levelup">
-    <div class="text">LEVEL UP!</div>
+    <div class="flash"></div>
+    <div class="burst" id="burst"></div>
+    <div class="levelup-card">
+      <div class="text">LEVEL UP!</div>
+      <div class="sub" id="levelup-sub">Lv. 2</div>
+    </div>
   </div>
 
   <script src="app.js"></script>

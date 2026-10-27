@@ -222,8 +222,55 @@ function animatePop(id) {
 
 function animateLevelUp() {
   const overlay = document.getElementById("levelup");
+  const sub = document.getElementById("levelup-sub");
+  const burst = document.getElementById("burst");
+
+  // Tampilkan level baru di bawah teks.
+  sub.textContent = "Lv. " + state.level;
+
+  // Buat 14 partikel kilau yang menyebar ke segala arah.
+  burst.innerHTML = "";
+  const jumlah = 14;
+  for (let i = 0; i < jumlah; i++) {
+    const spark = document.createElement("div");
+    spark.className = "spark";
+    // Sudut merata melingkar, jarak acak 60–140px.
+    const sudut = (i / jumlah) * Math.PI * 2;
+    const jarak = 60 + Math.random() * 80;
+    spark.style.setProperty("--dx", Math.cos(sudut) * jarak + "px");
+    spark.style.setProperty("--dy", Math.sin(sudut) * jarak + "px");
+    burst.appendChild(spark);
+  }
+
+  // Jalankan animasi: kasih kelas 'show', cabut setelah selesai.
+  overlay.classList.remove("show"); // reset dulu kalau masih nyala
+  void overlay.offsetWidth;          // trik: paksa browser "mulai ulang" animasi
   overlay.classList.add("show");
-  setTimeout(() => overlay.classList.remove("show"), 1400);
+  setTimeout(() => overlay.classList.remove("show"), 1600);
+}
+
+
+// ---------------------------------------------------------------------
+//  7c) resetGame()
+//  Balikin semua ke awal (Level 1, EXP 0, stat 50) buat testing.
+//  Riwayat & tanggal mulai juga di-reset. Minta konfirmasi dulu.
+// ---------------------------------------------------------------------
+function resetGame() {
+  const yakin = confirm("Reset Ascend ke Level 1? Semua progres (EXP, stat, streak, riwayat) dihapus.");
+  if (!yakin) return;
+
+  state = {
+    exp: 0,
+    level: 1,
+    done: [],
+    stats: { body: 50, mind: 50, looks: 50, discipline: 50 },
+    date: today(),
+    startDate: today(),
+    streak: 0,
+    history: [],
+  };
+  save();
+  render();
 }
 
 
@@ -341,3 +388,6 @@ function renderStats() {
 // ---------------------------------------------------------------------
 load();
 render();
+
+// Sambungkan tombol reset (testing).
+document.getElementById("reset-btn").addEventListener("click", resetGame);
