@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ascend</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header: nama app + level + EXP bar -->
+    <header class="header">
+      <div class="brand">ASCEND</div>
+      <div class="level-row">
+        <span id="level-label">Lv. 1</span>
+        <span id="exp-label">0 / 100 EXP</span>
+      </div>
+      <div class="exp-track">
+        <div class="exp-fill" id="exp-fill"></div>
+      </div>
+    </header>
+
+    <!-- Judul hari -->
+    <h2 class="day-title">🗺️ Misi Hari Ini</h2>
+
+    <!-- Daftar misi diisi otomatis oleh JavaScript -->
+    <div class="mission-list" id="mission-list"></div>
+
+    <!-- Pesan motivasi -->
+    <div class="pep-talk" id="pep-talk"></div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
