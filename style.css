@@ -346,24 +346,6 @@ body {
   to   { box-shadow: 0 0 22px rgba(31, 71, 232, 1); }
 }
 
-/* Tombol reset (testing) */
-.reset-btn {
-  display: block;
-  width: 100%;
-  margin-top: 26px;
-  padding: 12px;
-  background: transparent;
-  color: #6f8cff;
-  border: 1px solid #1a3a8a;
-  border-radius: 10px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.reset-btn:hover {
-  background: #0f1733;
-}
-
 /* Hormati setting "kurangi gerak" di OS: matikan semua animasi */
 @media (prefers-reduced-motion: reduce) {
   .mission.just-checked,
