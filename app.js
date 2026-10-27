@@ -25,10 +25,6 @@ const MISSIONS = [
   { id: "inggris",   name: "🇬🇧 Belajar Inggris ~15 menit", exp: 12, stats: { mind: 3 } },
   { id: "build",     name: "💻 Ngoding app 30 menit",      exp: 15, stats: { mind: 3, discipline: 2 } },
   { id: "tidur",     name: "😴 Tidur ≥ 7 jam",             exp: 10, stats: { body: 2, mind: 1 } },
-
-  // ⚠️ MISI TEST — SEMENTARA. Buat nyoba animasi LEVEL UP (EXP 100 = langsung naik level).
-  //    Hapus baris ini kalau sudah selesai testing.
-  { id: "__test_levelup", name: "⚡ [TEST] Picu Level Up (+100)", exp: 100, stats: { discipline: 1 } },
 ];
 
 
@@ -251,30 +247,6 @@ function animateLevelUp() {
 
 
 // ---------------------------------------------------------------------
-//  7c) resetGame()
-//  Balikin semua ke awal (Level 1, EXP 0, stat 50) buat testing.
-//  Riwayat & tanggal mulai juga di-reset. Minta konfirmasi dulu.
-// ---------------------------------------------------------------------
-function resetGame() {
-  const yakin = confirm("Reset Ascend ke Level 1? Semua progres (EXP, stat, streak, riwayat) dihapus.");
-  if (!yakin) return;
-
-  state = {
-    exp: 0,
-    level: 1,
-    done: [],
-    stats: { body: 50, mind: 50, looks: 50, discipline: 50 },
-    date: today(),
-    startDate: today(),
-    streak: 0,
-    history: [],
-  };
-  save();
-  render();
-}
-
-
-// ---------------------------------------------------------------------
 //  8) render()  — gambar ulang header, stat, daftar misi, pesan.
 // ---------------------------------------------------------------------
 function render() {
@@ -388,6 +360,3 @@ function renderStats() {
 // ---------------------------------------------------------------------
 load();
 render();
-
-// Sambungkan tombol reset (testing).
-document.getElementById("reset-btn").addEventListener("click", resetGame);
