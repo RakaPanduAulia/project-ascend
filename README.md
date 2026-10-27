@@ -6,7 +6,8 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 
 ## Status
 - **Tahap 1:** papan misi + EXP bar, disimpan di browser (localStorage).
-- **Tahap 2 (sekarang):** tambah 4 stat (Body / Mind / Looks / Discipline) yang naik-turun sesuai misi.
+- **Tahap 2:** tambah 4 stat (Body / Mind / Looks / Discipline) yang naik-turun sesuai misi.
+- **Tahap 3 (sekarang):** riwayat harian, streak 🔥, dan hitungan Day X/66.
 
 ## Cara buka
 Buka `index.html` di browser. Gak perlu install apa-apa.

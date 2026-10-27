@@ -1,7 +1,8 @@
 // =====================================================================
-//  ASCEND — Tahap 2
-//  Papan misi + EXP + LEVEL + STAT (Body/Mind/Looks/Discipline).
-//  Centang misi -> EXP & stat naik. Semua disimpan di browser.
+//  ASCEND — Tahap 3
+//  Papan misi + EXP + LEVEL + STAT + RIWAYAT + STREAK + Day X/66.
+//  Centang misi -> EXP & stat naik. Tiap ganti hari, hari kemarin
+//  disimpan ke riwayat dan streak dihitung. Semua awet di browser.
 // =====================================================================
 
 
@@ -38,7 +39,10 @@ const STAT_INFO = [
 
 // ---------------------------------------------------------------------
 //  2) STATE (keadaan sekarang)
-//  Ditambah 'stats': nilai tiap stat, mulai dari 50 (netral).
+//  Tambahan Tahap 3:
+//    startDate = tanggal pertama pakai app (buat hitung "Day X/66")
+//    streak    = berapa hari beruntun nyelesaiin minimal 1 misi
+//    history   = daftar hari lalu, mis. [{ date:"2026-10-26", kelar:5 }]
 // ---------------------------------------------------------------------
 let state = {
   exp: 0,
@@ -46,6 +50,9 @@ let state = {
   done: [],
   stats: { body: 50, mind: 50, looks: 50, discipline: 50 },
   date: today(),
+  startDate: today(),
+  streak: 0,
+  history: [],
 };
 
 
@@ -77,16 +84,62 @@ function load() {
   if (saved) {
     state = JSON.parse(saved);
   }
-  // Jaga-jaga data lama belum punya 'stats' (dari Tahap 1).
-  if (!state.stats) {
-    state.stats = { body: 50, mind: 50, looks: 50, discipline: 50 };
-  }
-  // Ganti hari -> reset centang misi (EXP, level, stat tetap).
+  // Jaga-jaga data lama belum punya field baru (dari tahap sebelumnya).
+  if (!state.stats)     state.stats = { body: 50, mind: 50, looks: 50, discipline: 50 };
+  if (!state.startDate) state.startDate = state.date || today();
+  if (state.streak === undefined) state.streak = 0;
+  if (!state.history)   state.history = [];
+
+  // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
-    state.done = [];
-    state.date = today();
-    save();
+    rolloverDay();
   }
+}
+
+
+// ---------------------------------------------------------------------
+//  5b) rolloverDay()
+//  Dipanggil pas ketahuan hari sudah ganti. Tugasnya:
+//    1. Simpan jumlah misi kelar KEMARIN ke 'history'.
+//    2. Update streak: kalau kemarin kelar >= 1 misi, streak +1;
+//       kalau kemarin kosong (0 misi), streak balik ke 0.
+//    3. Reset centang buat hari baru (EXP, level, stat TETAP).
+// ---------------------------------------------------------------------
+function rolloverDay() {
+  const kelarKemarin = state.done.length;
+
+  // 1) Arsipkan hari kemarin.
+  state.history.push({ date: state.date, kelar: kelarKemarin });
+  // Simpan paling banyak 60 hari terakhir biar gak kebanyakan.
+  if (state.history.length > 60) {
+    state.history = state.history.slice(-60);
+  }
+
+  // 2) Update streak.
+  if (kelarKemarin >= 1) {
+    state.streak += 1;
+  } else {
+    state.streak = 0;
+  }
+
+  // 3) Hari baru.
+  state.done = [];
+  state.date = today();
+  save();
+}
+
+
+// ---------------------------------------------------------------------
+//  5c) dayNumber()
+//  Hitung "hari ke berapa" sejak startDate (hari pertama = Day 1).
+//  Selisih milidetik dibagi jumlah milidetik dalam 1 hari.
+// ---------------------------------------------------------------------
+function dayNumber() {
+  const mulai = new Date(state.startDate);
+  const sekarang = new Date(today());
+  const satuHari = 1000 * 60 * 60 * 24; // ms dalam sehari
+  const selisih = Math.round((sekarang - mulai) / satuHari);
+  return selisih + 1; // +1 biar hari pertama = Day 1, bukan Day 0
 }
 
 
@@ -146,6 +199,11 @@ function toggleMission(id) {
 //  8) render()  — gambar ulang header, stat, daftar misi, pesan.
 // ---------------------------------------------------------------------
 function render() {
+  // Day X / 66 + streak di bagian atas.
+  document.getElementById("day-label").textContent = "DAY " + dayNumber();
+  document.getElementById("day-total").textContent = "/ 66";
+  document.getElementById("streak-label").textContent = "🔥 " + state.streak;
+
   document.getElementById("level-label").textContent = "Lv. " + state.level;
   document.getElementById("exp-label").textContent =
     state.exp + " / " + expNeeded(state.level) + " EXP";
@@ -181,6 +239,35 @@ function render() {
   } else {
     pep.textContent = "🔥 Semua misi kelar! Hari yang sempurna. Istirahat yang layak.";
   }
+
+  renderHistory();
+}
+
+
+// ---------------------------------------------------------------------
+//  8c) renderHistory()
+//  Gambar daftar hari lalu dari 'history', paling baru di atas.
+//  Tiap baris: tanggal + berapa misi kelar hari itu.
+// ---------------------------------------------------------------------
+function renderHistory() {
+  const box = document.getElementById("history-list");
+  box.innerHTML = "";
+
+  if (state.history.length === 0) {
+    box.innerHTML = `<div class="history-empty">Belum ada riwayat. Mulai hari ini! 🚀</div>`;
+    return;
+  }
+
+  // slice().reverse() -> salin lalu balik urutan (terbaru dulu).
+  state.history.slice().reverse().forEach(hari => {
+    const row = document.createElement("div");
+    row.className = "history-row";
+    row.innerHTML = `
+      <span class="history-date">${hari.date}</span>
+      <span class="history-count">${hari.kelar} misi</span>
+    `;
+    box.appendChild(row);
+  });
 }
 
 
