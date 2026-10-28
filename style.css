@@ -667,3 +667,71 @@ body.theme-gold .skill-status {
 body.theme-gold .learn {
   background: #b8860b;
 }
+
+
+/* ===== Tahap 9: Pemantauan Gizi ===== */
+.gizi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+.gizi-row {
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.gizi-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+.gizi-num {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.gizi-track {
+  height: 9px;
+  background: #0b1a4d;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.gizi-fill {
+  height: 100%;
+  background: #4d6bff;
+  transition: width 0.3s ease;
+}
+.gizi-fill.done {
+  background: linear-gradient(90deg, #1f47e8, #7fd0ff);
+}
+.gizi-btns {
+  display: flex;
+  gap: 8px;
+}
+.gizi-btn {
+  flex: 1;
+  background: #16233f;
+  color: #cdd6f4;
+  border: 1px solid #1a3a8a;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 7px 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+.gizi-btn:hover {
+  filter: brightness(1.2);
+}
+.gizi-btn:active {
+  transform: scale(0.97);
+}
+body.theme-gold .gizi-fill {
+  background: #b8860b;
+}
+body.theme-gold .gizi-fill.done {
+  background: linear-gradient(90deg, #b8860b, #f5c518);
+}
