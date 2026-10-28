@@ -924,9 +924,37 @@ function renderStats() {
 
 
 // ---------------------------------------------------------------------
+//  8k) gotoPage(name)  — ganti halaman aktif (navigasi tab).
+//  Sembunyikan semua .page, tampilkan yang dipilih, lalu tandai
+//  tombol nav yang aktif. Semua halaman tetap 1 file — cuma
+//  disembunyikan/ditampilkan pakai kelas CSS (pola SPA sederhana).
+// ---------------------------------------------------------------------
+function gotoPage(name) {
+  // Matikan semua halaman, nyalakan yang dipilih.
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.toggle("active", p.id === "page-" + name);
+  });
+  // Tandai tombol nav yang aktif.
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-page") === name);
+  });
+  // Gulir ke atas tiap ganti halaman (biar gak bingung posisi).
+  window.scrollTo(0, 0);
+}
+
+// Pasang klik di tiap tombol nav bawah.
+function setupNav() {
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => gotoPage(btn.getAttribute("data-page")));
+  });
+}
+
+
+// ---------------------------------------------------------------------
 //  9) START
 // ---------------------------------------------------------------------
 load();
 applyTheme();        // pasang tema (emas kalau sudah dibeli)
 claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
+setupNav();          // aktifkan navigasi tab bawah
 render();
