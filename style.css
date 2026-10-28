@@ -460,3 +460,119 @@ body {
 .mission-cat:first-child {
   margin-top: 0;
 }
+
+
+/* ===== Tahap 7: Poin, Shop, Item, Tema ===== */
+
+/* Kontainer chip di kanan atas (poin + streak) */
+.chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.poin-chip {
+  background: #0b1a4d;
+  border: 1px solid #1a3a8a;
+  color: #7fd0ff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* Daftar item Shop */
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+}
+.shop-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.shop-info {
+  flex: 1;
+  min-width: 0;
+}
+.shop-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.shop-stok {
+  font-size: 11px;
+  color: #7fd0ff;
+  background: #0b1a4d;
+  border: 1px solid #1a3a8a;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+.shop-desc {
+  font-size: 12px;
+  opacity: 0.7;
+  line-height: 1.35;
+}
+.buy {
+  flex-shrink: 0;
+  background: #1f47e8;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+.buy:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.buy:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.buy:disabled {
+  background: #1a2240;
+  color: #6b7aa8;
+  cursor: not-allowed;
+}
+.buy.owned {
+  background: #0b1a4d;
+  color: #9fb2ff;
+  border: 1px solid #1a3a8a;
+}
+
+/* ===== Tema Emas (item kosmetik) — ganti aksen biru jadi emas ===== */
+body.theme-gold .brand,
+body.theme-gold .day-counter {
+  color: #f5c518;
+  text-shadow: 0 0 18px rgba(245, 197, 24, 0.5);
+}
+body.theme-gold .exp-fill {
+  background: linear-gradient(90deg, #b8860b, #f5c518) !important;
+  box-shadow: 0 0 12px rgba(245, 197, 24, 0.6) !important;
+}
+body.theme-gold .mission-cat,
+body.theme-gold .mission .exp,
+body.theme-gold .ach-count,
+body.theme-gold .history-count,
+body.theme-gold .poin-chip {
+  color: #f5c518;
+}
+body.theme-gold .buy {
+  background: #b8860b;
+}
+body.theme-gold .badge.unlocked {
+  border-color: #f5c518;
+  box-shadow: 0 0 12px rgba(245, 197, 24, 0.35);
+}

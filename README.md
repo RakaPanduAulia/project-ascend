@@ -10,7 +10,8 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 3:** riwayat harian, streak 🔥, dan hitungan Day X/66.
 - **Tahap 4:** poles tampilan — animasi naik level, efek pop saat centang, EXP bar berdenyut, hormati reduced-motion.
 - **Tahap 5:** sistem Achievement — 8 lencana yang ke-unlock saat capai milestone (level, streak, stat, hari produktif), dengan notifikasi toast.
-- **Tahap 6 (sekarang):** misi lebih spesifik & terukur (push up 50x, squat 50x, plank 2 menit, dll), dikelompokkan per kategori (Fisik / Perawatan / Mental / Build).
+- **Tahap 6:** misi lebih spesifik & terukur (gerakan rumahan realistis: push up 15x, squat 20x, plank 1 menit, dll), dikelompokkan per kategori (Fisik / Perawatan / Mental / Build).
+- **Tahap 7 (sekarang):** ekonomi — 💎 Poin (dari misi + daily login), Shop & Item (Streak Freeze, EXP Boost, Tema Emas). EXP tetap mata uang level, Poin buat belanja.
 
 ## Cara buka
 Buka `index.html` di browser. Gak perlu install apa-apa.

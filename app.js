@@ -15,12 +15,12 @@
 //            (stat yang gak disebut berarti +0)
 // ---------------------------------------------------------------------
 const MISSIONS = [
-  // --- 🔴 FISIK (angka konkret, terukur) ---
-  { id: "pushup",    name: "💪 Push up 50x",              exp: 12, stats: { body: 4 },               cat: "Fisik" },
-  { id: "squat",     name: "🦵 Squat 50x",               exp: 12, stats: { body: 4 },               cat: "Fisik" },
-  { id: "plank",     name: "🧘 Plank 2 menit",            exp: 10, stats: { body: 3, discipline: 1 }, cat: "Fisik" },
-  { id: "gym",       name: "🏋️ Gym 45 menit",            exp: 15, stats: { body: 4, discipline: 2 }, cat: "Fisik" },
-  { id: "jalan",     name: "🚶 Jalan 8.000 langkah",      exp: 10, stats: { body: 3 },               cat: "Fisik" },
+  // --- 🔴 FISIK (gerakan rumahan, singkat, tanpa alat) ---
+  { id: "stretch",   name: "🤸 Stretching / pemanasan 5 menit", exp: 8,  stats: { body: 2 },             cat: "Fisik" },
+  { id: "pushup",    name: "💪 Push up 15x",               exp: 10, stats: { body: 3 },              cat: "Fisik" },
+  { id: "squat",     name: "🦵 Squat 20x",                exp: 10, stats: { body: 3 },              cat: "Fisik" },
+  { id: "plank",     name: "🧘 Plank 1 menit",             exp: 10, stats: { body: 3, discipline: 1 }, cat: "Fisik" },
+  { id: "jalan",     name: "🚶 Jalan kaki 15 menit",        exp: 10, stats: { body: 3 },              cat: "Fisik" },
 
   // --- 🟢 PERAWATAN & RUTIN ---
   { id: "skincare",  name: "🧴 Skincare pagi + malam",     exp: 8,  stats: { looks: 3 },             cat: "Perawatan" },
@@ -85,11 +85,32 @@ const ACHIEVEMENTS = [
 
 
 // ---------------------------------------------------------------------
+//  1d) SHOP — daftar item yang bisa dibeli pakai 💎 Poin.
+//  Tiap item:
+//    id    = penanda unik
+//    icon  = emoji
+//    name  = nama item
+//    desc  = penjelasan efeknya
+//    harga = berapa Poin
+//    tipe  = "consumable" (habis sekali pakai) / "boost" (sekali sehari)
+//            / "cosmetic" (dibeli sekali, nyala selamanya)
+// ---------------------------------------------------------------------
+const SHOP = [
+  { id: "streak_freeze", icon: "🧊", name: "Streak Freeze", harga: 60,  tipe: "consumable",
+    desc: "Lindungi streak 1 hari. Kalau sehari bolong, streak gak putus." },
+  { id: "exp_boost",     icon: "⚡", name: "EXP Boost",     harga: 40,  tipe: "boost",
+    desc: "Misi hari ini kasih EXP dobel. Aktif begitu dibeli." },
+  { id: "theme_gold",    icon: "🏆", name: "Tema Emas",     harga: 150, tipe: "cosmetic",
+    desc: "Ganti aksen app jadi emas. Dibeli sekali, nyala selamanya." },
+];
+
+// Berapa Poin didapat dari tiap sumber.
+const POIN_PER_MISI  = 5;   // tiap misi kelar
+const POIN_LOGIN     = 20;  // daily login (sekali per hari)
+
+
+// ---------------------------------------------------------------------
 //  2) STATE (keadaan sekarang)
-//  Tambahan Tahap 3:
-//    startDate = tanggal pertama pakai app (buat hitung "Day X/66")
-//    streak    = berapa hari beruntun nyelesaiin minimal 1 misi
-//    history   = daftar hari lalu, mis. [{ date:"2026-10-26", kelar:5 }]
 // ---------------------------------------------------------------------
 let state = {
   exp: 0,
@@ -102,6 +123,11 @@ let state = {
   history: [],
   unlocked: [],   // id achievement yang sudah kebuka
   totalDone: 0,   // total misi kelar sepanjang masa (buat badge "Langkah Pertama")
+  poin: 0,            // 💎 mata uang buat belanja di Shop
+  items: {},          // item yang dimiliki, mis. { streak_freeze: 2 }
+  lastLogin: "",      // tanggal terakhir klaim daily login
+  expBoostDate: "",   // tanggal aktif EXP Boost (misi hari itu dobel EXP)
+  theme: "blue",      // tema aktif ("blue" default / "gold" dari item)
 };
 
 
@@ -150,6 +176,11 @@ function load() {
   if (!state.history)   state.history = [];
   if (!state.unlocked)  state.unlocked = [];
   if (state.totalDone === undefined) state.totalDone = 0;
+  if (state.poin === undefined) state.poin = 0;
+  if (!state.items)     state.items = {};
+  if (state.lastLogin === undefined) state.lastLogin = "";
+  if (state.expBoostDate === undefined) state.expBoostDate = "";
+  if (!state.theme)     state.theme = "blue";
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -179,6 +210,10 @@ function rolloverDay() {
   // 2) Update streak.
   if (kelarKemarin >= 1) {
     state.streak += 1;
+  } else if ((state.items.streak_freeze || 0) > 0) {
+    // Punya Streak Freeze -> pakai 1, streak gak putus (tetap, gak nambah).
+    state.items.streak_freeze -= 1;
+    state._freezeDipakai = true; // penanda buat kasih tau user pas render
   } else {
     state.streak = 0;
   }
@@ -242,15 +277,22 @@ function toggleMission(id) {
   const sudahSelesai = state.done.includes(id);
   let naikLevel = false;
 
+  // EXP Boost: kalau item EXP Boost aktif hari ini, misi kasih EXP dobel.
+  const boostAktif = state.expBoostDate === today();
+  const expMisi = boostAktif ? mission.exp * 2 : mission.exp;
+
   if (sudahSelesai) {
     state.done = state.done.filter(x => x !== id);
-    addExp(-mission.exp);
+    addExp(-expMisi);
     applyStats(mission.stats, -1);
+    state.poin -= POIN_PER_MISI;            // batalin: Poin ikut balik
+    if (state.poin < 0) state.poin = 0;
   } else {
     state.done.push(id);
     state.totalDone += 1; // hitung total misi kelar sepanjang masa
-    naikLevel = addExp(mission.exp); // simpan apakah naik level
+    naikLevel = addExp(expMisi); // simpan apakah naik level
     applyStats(mission.stats, +1);
+    state.poin += POIN_PER_MISI;            // tiap misi kelar = +Poin
   }
 
   if (state.exp < 0) state.exp = 0;
@@ -263,6 +305,83 @@ function toggleMission(id) {
   if (!sudahSelesai) animatePop(id);
   // Animasi: overlay "LEVEL UP!" kalau tadi naik level.
   if (naikLevel) animateLevelUp();
+}
+
+
+// ---------------------------------------------------------------------
+//  7c) claimDailyLogin()
+//  Kasih bonus Poin sekali per hari. Kalau hari ini sudah klaim, gak
+//  ngapa-ngapain. Dipanggil otomatis pas app dibuka.
+// ---------------------------------------------------------------------
+function claimDailyLogin() {
+  if (state.lastLogin === today()) return; // sudah klaim hari ini
+  state.lastLogin = today();
+  state.poin += POIN_LOGIN;
+  save();
+  toastInfo(`🎁 Daily login! +${POIN_LOGIN} 💎`);
+}
+
+
+// ---------------------------------------------------------------------
+//  7d) buyItem(id)
+//  Beli item dari Shop kalau Poin cukup. Efek tergantung tipe item:
+//    consumable -> nambah stok di inventory (dipakai nanti otomatis)
+//    boost      -> langsung aktif hari ini
+//    cosmetic   -> nyalain selamanya (cuma bisa beli sekali)
+// ---------------------------------------------------------------------
+function buyItem(id) {
+  const item = SHOP.find(x => x.id === id);
+  if (!item) return;
+
+  // Tema emas cuma bisa dibeli sekali.
+  if (item.tipe === "cosmetic" && state.theme === "gold") {
+    toastInfo("Kamu sudah punya Tema Emas.");
+    return;
+  }
+
+  if (state.poin < item.harga) {
+    toastInfo(`💎 Poin kurang. Butuh ${item.harga}, punya ${state.poin}.`);
+    return;
+  }
+
+  // Bayar.
+  state.poin -= item.harga;
+
+  // Terapkan efek.
+  if (item.tipe === "consumable") {
+    state.items[id] = (state.items[id] || 0) + 1;
+    toastInfo(`${item.icon} ${item.name} dibeli! Stok: ${state.items[id]}`);
+  } else if (item.tipe === "boost") {
+    state.expBoostDate = today();
+    toastInfo(`${item.icon} ${item.name} aktif! Misi hari ini EXP dobel.`);
+  } else if (item.tipe === "cosmetic") {
+    state.theme = "gold";
+    applyTheme();
+    toastInfo(`${item.icon} ${item.name} aktif!`);
+  }
+
+  save();
+  render();
+}
+
+
+// ---------------------------------------------------------------------
+//  7e) applyTheme()  — pasang/lepas kelas tema emas di <body>.
+// ---------------------------------------------------------------------
+function applyTheme() {
+  document.body.classList.toggle("theme-gold", state.theme === "gold");
+}
+
+
+// ---------------------------------------------------------------------
+//  7f) toastInfo(teks)  — notifikasi kecil umum (pakai toast yang sama).
+// ---------------------------------------------------------------------
+function toastInfo(teks) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.innerHTML = teks;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
 
@@ -316,6 +435,15 @@ function render() {
   document.getElementById("day-label").textContent = "DAY " + dayNumber();
   document.getElementById("day-total").textContent = "/ 66";
   document.getElementById("streak-label").textContent = "🔥 " + state.streak;
+
+  // Poin (mata uang) di header.
+  document.getElementById("poin-label").textContent = "💎 " + state.poin;
+
+  // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
+  if (state._freezeDipakai) {
+    state._freezeDipakai = false;
+    toastInfo("🧊 Streak Freeze dipakai — streak kamu aman!");
+  }
 
   document.getElementById("level-label").textContent = "Lv. " + state.level;
   document.getElementById("exp-label").textContent =
@@ -376,6 +504,57 @@ function render() {
   renderHistory();
   checkAchievements();
   renderAchievements();
+  renderShop();
+}
+
+
+// ---------------------------------------------------------------------
+//  8g) renderShop()  — gambar daftar item Shop + status kepemilikan.
+//  Tiap item nunjukin harga, dan tombol beli nonaktif kalau Poin kurang
+//  atau item kosmetik sudah dimiliki.
+// ---------------------------------------------------------------------
+function renderShop() {
+  const box = document.getElementById("shop-list");
+  if (!box) return;
+  box.innerHTML = "";
+
+  SHOP.forEach(item => {
+    const punyaKosmetik = item.tipe === "cosmetic" && state.theme === "gold";
+    const mampu = state.poin >= item.harga;
+    const stok = state.items[item.id] || 0;
+
+    const row = document.createElement("div");
+    row.className = "shop-item";
+
+    // Label tombol tergantung kondisi.
+    let tombol;
+    if (punyaKosmetik) {
+      tombol = `<button class="buy owned" disabled>Dimiliki</button>`;
+    } else if (!mampu) {
+      tombol = `<button class="buy" disabled>💎 ${item.harga}</button>`;
+    } else {
+      tombol = `<button class="buy" data-buy="${item.id}">💎 ${item.harga}</button>`;
+    }
+
+    // Tampilkan stok buat item consumable.
+    const stokLabel = item.tipe === "consumable" && stok > 0
+      ? `<span class="shop-stok">x${stok}</span>` : "";
+
+    row.innerHTML = `
+      <div class="shop-icon">${item.icon}</div>
+      <div class="shop-info">
+        <div class="shop-name">${item.name} ${stokLabel}</div>
+        <div class="shop-desc">${item.desc}</div>
+      </div>
+      ${tombol}
+    `;
+    box.appendChild(row);
+  });
+
+  // Pasang klik tombol beli (hanya yang aktif).
+  box.querySelectorAll("[data-buy]").forEach(btn => {
+    btn.addEventListener("click", () => buyItem(btn.getAttribute("data-buy")));
+  });
 }
 
 
@@ -488,4 +667,6 @@ function renderStats() {
 //  9) START
 // ---------------------------------------------------------------------
 load();
+applyTheme();        // pasang tema (emas kalau sudah dibeli)
+claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
 render();
