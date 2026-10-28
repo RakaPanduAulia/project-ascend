@@ -596,7 +596,6 @@ function render() {
     expFill.classList.remove("glow");
   }
 
-  renderSummary();
   renderStats();
   renderGizi();
 
@@ -833,33 +832,6 @@ function renderHistory() {
 
 
 // ---------------------------------------------------------------------
-//  8h2) renderSummary()  — 1 baris status cepat di atas:
-//  berapa misi kelar + persen rata-rata target gizi tercapai.
-// ---------------------------------------------------------------------
-function renderSummary() {
-  const box = document.getElementById("day-summary");
-  if (!box) return;
-
-  const kelar = state.done.length;
-  const total = MISSIONS.length;
-
-  // Rata-rata persen gizi (dibatasi 100% per item biar gak lebay).
-  const g = state.gizi, t = state.giziTarget;
-  const persenGizi = Math.round(
-    (Math.min(1, g.kalori / t.kalori) +
-     Math.min(1, g.protein / t.protein) +
-     Math.min(1, g.air / t.air)) / 3 * 100
-  );
-
-  box.innerHTML = `
-    <span>🗺️ Misi: <b>${kelar}/${total}</b></span>
-    <span>🍎 Gizi: <b>${persenGizi}%</b></span>
-    <span>💎 Poin: <b>${state.poin}</b></span>
-  `;
-}
-
-
-// ---------------------------------------------------------------------
 //  8i) tambahGizi(key, arah)  — tambah/kurang asupan gizi hari ini.
 //  arah = +1 / -1, langkahnya dari GIZI_STEP. Gak boleh minus.
 //  Kalau protein capai target, kasih bonus Poin sekali per hari.
@@ -952,9 +924,37 @@ function renderStats() {
 
 
 // ---------------------------------------------------------------------
+//  8k) gotoPage(name)  — ganti halaman aktif (navigasi tab).
+//  Sembunyikan semua .page, tampilkan yang dipilih, lalu tandai
+//  tombol nav yang aktif. Semua halaman tetap 1 file — cuma
+//  disembunyikan/ditampilkan pakai kelas CSS (pola SPA sederhana).
+// ---------------------------------------------------------------------
+function gotoPage(name) {
+  // Matikan semua halaman, nyalakan yang dipilih.
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.toggle("active", p.id === "page-" + name);
+  });
+  // Tandai tombol nav yang aktif.
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-page") === name);
+  });
+  // Gulir ke atas tiap ganti halaman (biar gak bingung posisi).
+  window.scrollTo(0, 0);
+}
+
+// Pasang klik di tiap tombol nav bawah.
+function setupNav() {
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => gotoPage(btn.getAttribute("data-page")));
+  });
+}
+
+
+// ---------------------------------------------------------------------
 //  9) START
 // ---------------------------------------------------------------------
 load();
 applyTheme();        // pasang tema (emas kalau sudah dibeli)
 claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
+setupNav();          // aktifkan navigasi tab bawah
 render();

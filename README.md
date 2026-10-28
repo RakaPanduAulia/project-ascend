@@ -14,7 +14,7 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 7:** ekonomi — 💎 Poin (dari misi + daily login), Shop & Item (Streak Freeze, EXP Boost, Tema Emas). EXP tetap mata uang level, Poin buat belanja.
 - **Tahap 8:** Skill tree — 5 skill di-learn pakai Poin, syaratnya dari stat/level/achievement (Momentum, Iron Body, Deep Focus, Unbreakable, Ascendant). Efek pasif permanen (bonus EXP/Poin, freeze gratis).
 - **Tahap 9:** Pemantauan Gizi — lacak kalori / protein / air harian (input manual +/-), bar progress menuju target, bonus Poin saat target protein tercapai. Reset tiap hari.
-- **Tahap 10 (sekarang):** Touch-up tampilan — tiap bagian jadi kartu (.section) rapi, ringkasan hari di atas (misi/gizi/poin), variabel warna terpusat, animasi fade-in halus (hormati reduced-motion).
+- **Tahap 10 (sekarang):** Touch-up + multi-halaman — tiap bagian jadi kartu rapi, variabel warna terpusat, DAN navigasi tab bawah (SPA): Home (stat/EXP/poin/streak + misi utama), Gizi, Skill, Shop, Lainnya (achievement + riwayat). 1 file HTML, halaman diganti via JS.
 
 ## Opsional ke depan
 - **Tahap 11 (opsional):** AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
