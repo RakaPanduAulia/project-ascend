@@ -1,6 +1,6 @@
 # Project Ascend
 
-App glow-up gamifikasi — papan misi harian ala RPG. Centang misi, EXP naik, (nanti) level & stat ikut naik. Terinspirasi app "66日間".
+App glow-up gamifikasi — papan misi harian ala RPG. Centang misi, EXP naik, (nanti) level & stat ikut naik. Terinspirasi app "Life Reset".
 
 Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 
