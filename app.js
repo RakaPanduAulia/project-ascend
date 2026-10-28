@@ -596,6 +596,7 @@ function render() {
     expFill.classList.remove("glow");
   }
 
+  renderSummary();
   renderStats();
   renderGizi();
 
@@ -828,6 +829,33 @@ function renderHistory() {
     `;
     box.appendChild(row);
   });
+}
+
+
+// ---------------------------------------------------------------------
+//  8h2) renderSummary()  — 1 baris status cepat di atas:
+//  berapa misi kelar + persen rata-rata target gizi tercapai.
+// ---------------------------------------------------------------------
+function renderSummary() {
+  const box = document.getElementById("day-summary");
+  if (!box) return;
+
+  const kelar = state.done.length;
+  const total = MISSIONS.length;
+
+  // Rata-rata persen gizi (dibatasi 100% per item biar gak lebay).
+  const g = state.gizi, t = state.giziTarget;
+  const persenGizi = Math.round(
+    (Math.min(1, g.kalori / t.kalori) +
+     Math.min(1, g.protein / t.protein) +
+     Math.min(1, g.air / t.air)) / 3 * 100
+  );
+
+  box.innerHTML = `
+    <span>🗺️ Misi: <b>${kelar}/${total}</b></span>
+    <span>🍎 Gizi: <b>${persenGizi}%</b></span>
+    <span>💎 Poin: <b>${state.poin}</b></span>
+  `;
 }
 
 

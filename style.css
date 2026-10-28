@@ -1,4 +1,16 @@
-/* ===== Tema dasar: gelap + aksen oranye (vibe app 66日間) ===== */
+/* ===== Tema dasar: gelap + biru elektrik (Sung Jin-Woo / Solo Leveling) ===== */
+:root {
+  --bg:        #121217;
+  --card:      #0f1733;
+  --card-2:    #0b1a4d;
+  --border:    #1a3a8a;
+  --accent:    #1f47e8;
+  --accent-2:  #4d6bff;
+  --text:      #e8eaf4;
+  --muted:     #8a97c2;
+  --radius:    14px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,17 +19,49 @@
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #121217;
-  color: #e8eaf4;
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(31,71,232,0.12), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
   display: flex;
   justify-content: center;
   padding: 20px 14px 60px;
   min-height: 100vh;
+  line-height: 1.45;
 }
 
 .app {
   width: 100%;
   max-width: 480px;
+}
+
+/* ===== Seksi jadi "kartu" biar tiap bagian kepisah rapi ===== */
+.section {
+  background: rgba(15, 23, 51, 0.5);
+  border: 1px solid rgba(26, 58, 138, 0.5);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: fade-in 0.4s ease both;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Ringkasan hari: 1 baris status cepat */
+.day-summary {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.day-summary b {
+  color: var(--accent-2);
+  font-weight: 700;
 }
 
 /* ===== Header ===== */
@@ -115,9 +159,11 @@ body {
   transition: width 0.4s ease;
 }
 
-/* ===== Judul hari ===== */
+/* ===== Judul seksi ===== */
 .day-title {
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   margin-bottom: 14px;
 }
 
@@ -350,6 +396,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .mission.just-checked,
   .exp-fill.glow {
+    animation: none;
+  }
+  .section {
     animation: none;
   }
   .levelup-overlay.show .flash,
