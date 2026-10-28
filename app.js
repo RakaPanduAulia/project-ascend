@@ -166,7 +166,19 @@ let state = {
   theme: "blue",      // tema aktif ("blue" default / "gold" dari item)
   skills: [],         // id skill yang sudah di-learn (efek pasif nyala)
   lastFreezeStreak: 0,// streak terakhir saat Unbreakable kasih freeze gratis
+  gizi: { kalori: 0, protein: 0, air: 0 },          // asupan HARI INI
+  giziTarget: { kalori: 2200, protein: 120, air: 2500 }, // target harian
+  giziBonusDate: "",  // tanggal terakhir dapat bonus Poin dari protein
 };
+
+
+// Langkah tambah/kurang tiap tombol gizi (biar input cepat).
+const GIZI_STEP = { kalori: 100, protein: 10, air: 250 };
+const GIZI_INFO = [
+  { key: "kalori",  icon: "🔥", label: "Kalori",  unit: "kcal" },
+  { key: "protein", icon: "🍗", label: "Protein", unit: "g" },
+  { key: "air",     icon: "💧", label: "Air",     unit: "ml" },
+];
 
 
 // ---------------------------------------------------------------------
@@ -221,6 +233,9 @@ function load() {
   if (!state.theme)     state.theme = "blue";
   if (!state.skills)    state.skills = [];
   if (state.lastFreezeStreak === undefined) state.lastFreezeStreak = 0;
+  if (!state.gizi)       state.gizi = { kalori: 0, protein: 0, air: 0 };
+  if (!state.giziTarget) state.giziTarget = { kalori: 2200, protein: 120, air: 2500 };
+  if (state.giziBonusDate === undefined) state.giziBonusDate = "";
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -261,6 +276,7 @@ function rolloverDay() {
   // 3) Hari baru.
   state.done = [];
   state.date = today();
+  state.gizi = { kalori: 0, protein: 0, air: 0 }; // asupan balik 0 tiap hari baru
   save();
 }
 
@@ -581,6 +597,7 @@ function render() {
   }
 
   renderStats();
+  renderGizi();
 
   const list = document.getElementById("mission-list");
   list.innerHTML = "";
@@ -810,6 +827,73 @@ function renderHistory() {
       <span class="history-count">${hari.kelar} misi</span>
     `;
     box.appendChild(row);
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  8i) tambahGizi(key, arah)  — tambah/kurang asupan gizi hari ini.
+//  arah = +1 / -1, langkahnya dari GIZI_STEP. Gak boleh minus.
+//  Kalau protein capai target, kasih bonus Poin sekali per hari.
+// ---------------------------------------------------------------------
+function tambahGizi(key, arah) {
+  const step = GIZI_STEP[key];
+  state.gizi[key] += step * arah;
+  if (state.gizi[key] < 0) state.gizi[key] = 0;
+
+  // Bonus: protein nyampe target -> +5 Poin, sekali per hari.
+  if (key === "protein"
+      && state.gizi.protein >= state.giziTarget.protein
+      && state.giziBonusDate !== today()) {
+    state.giziBonusDate = today();
+    state.poin += 5;
+    toastInfo("🍗 Target protein tercapai! +5 💎");
+  }
+
+  save();
+  render();
+}
+
+
+// ---------------------------------------------------------------------
+//  8j) renderGizi()  — gambar 3 bar gizi (kalori / protein / air) +
+//  tombol +/- buat input manual. Bar penuh pas capai target.
+// ---------------------------------------------------------------------
+function renderGizi() {
+  const box = document.getElementById("gizi-list");
+  if (!box) return;
+  box.innerHTML = "";
+
+  GIZI_INFO.forEach(info => {
+    const nilai = state.gizi[info.key];
+    const target = state.giziTarget[info.key];
+    // Lebar bar = persen menuju target, maksimal 100%.
+    const persen = Math.min(100, Math.round((nilai / target) * 100));
+    const tercapai = nilai >= target;
+
+    const row = document.createElement("div");
+    row.className = "gizi-row";
+    row.innerHTML = `
+      <div class="gizi-head">
+        <span>${info.icon} ${info.label}${tercapai ? " ✓" : ""}</span>
+        <span class="gizi-num">${nilai} / ${target} ${info.unit}</span>
+      </div>
+      <div class="gizi-track">
+        <div class="gizi-fill${tercapai ? " done" : ""}" style="width:${persen}%;"></div>
+      </div>
+      <div class="gizi-btns">
+        <button class="gizi-btn" data-gizi-minus="${info.key}">−</button>
+        <button class="gizi-btn" data-gizi-plus="${info.key}">+ ${GIZI_STEP[info.key]}</button>
+      </div>
+    `;
+    box.appendChild(row);
+  });
+
+  box.querySelectorAll("[data-gizi-plus]").forEach(btn => {
+    btn.addEventListener("click", () => tambahGizi(btn.getAttribute("data-gizi-plus"), +1));
+  });
+  box.querySelectorAll("[data-gizi-minus]").forEach(btn => {
+    btn.addEventListener("click", () => tambahGizi(btn.getAttribute("data-gizi-minus"), -1));
   });
 }
 
