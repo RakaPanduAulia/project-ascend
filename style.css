@@ -445,3 +445,18 @@ body {
     transition: opacity 0.3s;
   }
 }
+
+/* ===== Judul kategori misi (Fisik, Perawatan, Mental, Build) ===== */
+.mission-cat {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6f8cff;
+  opacity: 0.8;
+  margin: 14px 0 2px;
+  padding-left: 2px;
+}
+.mission-cat:first-child {
+  margin-top: 0;
+}
