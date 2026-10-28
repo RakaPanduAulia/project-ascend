@@ -15,16 +15,33 @@
 //            (stat yang gak disebut berarti +0)
 // ---------------------------------------------------------------------
 const MISSIONS = [
-  { id: "gym",       name: "🏋️ Gym 45 menit",            exp: 15, stats: { body: 4, discipline: 2 } },
-  { id: "berangkat", name: "🌅 Berangkat ≤ 07:15",        exp: 10, stats: { body: 2, discipline: 2 } },
-  { id: "skincare",  name: "🧴 Skincare pagi/malam",       exp: 8,  stats: { looks: 3 } },
-  { id: "air",       name: "💧 Minum air ≥ 2 liter",       exp: 8,  stats: { body: 2 } },
-  { id: "makan",     name: "🥗 Makan 1 menu sehat",        exp: 8,  stats: { body: 2 } },
-  { id: "jurnal",    name: "📓 Jurnaling 5 menit",         exp: 10, stats: { mind: 3 } },
-  { id: "inggris",   name: "🇬🇧 Belajar Inggris ~15 menit", exp: 12, stats: { mind: 3 } },
-  { id: "build",     name: "💻 Ngoding app 30 menit",      exp: 15, stats: { mind: 3, discipline: 2 } },
-  { id: "tidur",     name: "😴 Tidur ≥ 7 jam",             exp: 10, stats: { body: 2, mind: 1 } },
+  // --- 🔴 FISIK (angka konkret, terukur) ---
+  { id: "pushup",    name: "💪 Push up 50x",              exp: 12, stats: { body: 4 },               cat: "Fisik" },
+  { id: "squat",     name: "🦵 Squat 50x",               exp: 12, stats: { body: 4 },               cat: "Fisik" },
+  { id: "plank",     name: "🧘 Plank 2 menit",            exp: 10, stats: { body: 3, discipline: 1 }, cat: "Fisik" },
+  { id: "gym",       name: "🏋️ Gym 45 menit",            exp: 15, stats: { body: 4, discipline: 2 }, cat: "Fisik" },
+  { id: "jalan",     name: "🚶 Jalan 8.000 langkah",      exp: 10, stats: { body: 3 },               cat: "Fisik" },
+
+  // --- 🟢 PERAWATAN & RUTIN ---
+  { id: "skincare",  name: "🧴 Skincare pagi + malam",     exp: 8,  stats: { looks: 3 },             cat: "Perawatan" },
+  { id: "air",       name: "💧 Minum air ≥ 2 liter",       exp: 8,  stats: { body: 2 },              cat: "Perawatan" },
+  { id: "makan",     name: "🥗 Makan 1 menu sehat",        exp: 8,  stats: { body: 2, looks: 1 },    cat: "Perawatan" },
+  { id: "berangkat", name: "🌅 Berangkat kerja ≤ 07:15",   exp: 10, stats: { discipline: 2 },        cat: "Perawatan" },
+  { id: "tidur",     name: "😴 Tidur ≥ 7 jam",             exp: 10, stats: { body: 2, mind: 1 },     cat: "Perawatan" },
+
+  // --- 🔵 MENTAL ---
+  { id: "jurnal",    name: "📓 Jurnaling 5 menit",         exp: 10, stats: { mind: 3 },              cat: "Mental" },
+  { id: "inggris",   name: "🇬🇧 Belajar Inggris 15 menit",  exp: 12, stats: { mind: 3 },              cat: "Mental" },
+  { id: "baca",      name: "📖 Baca 10 halaman",           exp: 10, stats: { mind: 3 },              cat: "Mental" },
+
+  // --- 🟣 BUILD (side hustle: ngembangin app Ascend) ---
+  { id: "build",     name: "💻 Ngoding app 30 menit",      exp: 15, stats: { mind: 3, discipline: 2 }, cat: "Build" },
+  { id: "prompt",    name: "🤖 Latihan prompt AI 15 menit", exp: 10, stats: { mind: 2 },             cat: "Build" },
 ];
+
+
+// Urutan kategori buat ditampilkan (misi dikelompokkan per kategori).
+const CATEGORIES = ["Fisik", "Perawatan", "Mental", "Build"];
 
 
 // Nama & warna tiap stat, buat ditampilkan. Urutannya ngikut ini.
@@ -60,8 +77,8 @@ const ACHIEVEMENTS = [
     cek: s => s.stats.body >= 80 },
   { id: "mind80", icon: "🧠", name: "Pikiran Tajam", desc: "Mind capai 80",
     cek: s => s.stats.mind >= 80 },
-  { id: "perfect_day", icon: "🏆", name: "Hari Sempurna", desc: "Selesaikan SEMUA misi dalam sehari",
-    cek: s => s.done.length >= MISSIONS.length },
+  { id: "perfect_day", icon: "🏆", name: "Hari Produktif", desc: "Selesaikan 8 misi dalam sehari",
+    cek: s => s.done.length >= 8 },
   { id: "day66", icon: "👑", name: "66 Hari", desc: "Bertahan sampai Day 66",
     cek: s => dayNumber() >= 66 },
 ];
@@ -319,18 +336,30 @@ function render() {
   const list = document.getElementById("mission-list");
   list.innerHTML = "";
 
-  MISSIONS.forEach(mission => {
-    const selesai = state.done.includes(mission.id);
-    const card = document.createElement("div");
-    card.className = "mission" + (selesai ? " done" : "");
-    card.setAttribute("data-id", mission.id);
-    card.innerHTML = `
-      <div class="check">${selesai ? "✓" : ""}</div>
-      <div class="name">${mission.name}</div>
-      <div class="exp">+${mission.exp}</div>
-    `;
-    card.addEventListener("click", () => toggleMission(mission.id));
-    list.appendChild(card);
+  // Gambar misi dikelompokkan per kategori (Fisik, Perawatan, Mental, Build).
+  // Tiap kategori dikasih judul kecil dulu, baru kartu-kartu misinya.
+  CATEGORIES.forEach(cat => {
+    const misiKategori = MISSIONS.filter(m => m.cat === cat);
+    if (misiKategori.length === 0) return;
+
+    const heading = document.createElement("div");
+    heading.className = "mission-cat";
+    heading.textContent = cat;
+    list.appendChild(heading);
+
+    misiKategori.forEach(mission => {
+      const selesai = state.done.includes(mission.id);
+      const card = document.createElement("div");
+      card.className = "mission" + (selesai ? " done" : "");
+      card.setAttribute("data-id", mission.id);
+      card.innerHTML = `
+        <div class="check">${selesai ? "✓" : ""}</div>
+        <div class="name">${mission.name}</div>
+        <div class="exp">+${mission.exp}</div>
+      `;
+      card.addEventListener("click", () => toggleMission(mission.id));
+      list.appendChild(card);
+    });
   });
 
   const total = MISSIONS.length;
