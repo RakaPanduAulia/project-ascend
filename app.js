@@ -110,6 +110,42 @@ const POIN_LOGIN     = 20;  // daily login (sekali per hari)
 
 
 // ---------------------------------------------------------------------
+//  1e) SKILLS — skill yang bisa di-LEARN pakai 💎 Poin.
+//  Tiap skill:
+//    id      = penanda unik
+//    icon    = emoji
+//    name    = nama skill
+//    desc    = efek pasifnya (teks buat user)
+//    harga   = biaya Poin buat learn
+//    syarat  = fungsi(state) -> true kalau skill BISA di-learn (kebuka)
+//    syaratTxt = teks syarat buat ditampilkan pas masih terkunci
+//  Efek pasifnya dibaca di tempat lain (mis. hitung EXP misi), jadi di
+//  sini cukup "didaftarkan". Pola data-driven, sama kayak achievement.
+// ---------------------------------------------------------------------
+const SKILLS = [
+  { id: "momentum", icon: "🏃", name: "Momentum", harga: 50,
+    desc: "+2 Poin bonus tiap misi kelar.",
+    syaratTxt: "Level 3", syarat: s => s.level >= 3 },
+
+  { id: "iron_body", icon: "💪", name: "Iron Body", harga: 80,
+    desc: "Misi kategori Fisik kasih +50% EXP.",
+    syaratTxt: "Body 65", syarat: s => s.stats.body >= 65 },
+
+  { id: "deep_focus", icon: "🧠", name: "Deep Focus", harga: 80,
+    desc: "Misi Mental & Build kasih +50% EXP.",
+    syaratTxt: "Mind 65", syarat: s => s.stats.mind >= 65 },
+
+  { id: "unbreakable", icon: "🔥", name: "Unbreakable", harga: 100,
+    desc: "Dapat 1 Streak Freeze gratis tiap kali streak kelipatan 7.",
+    syaratTxt: "Buka badge 'Seminggu Nyala'", syarat: s => s.unlocked.includes("streak7") },
+
+  { id: "ascendant", icon: "👑", name: "Ascendant", harga: 200,
+    desc: "SEMUA misi kasih +25% EXP.",
+    syaratTxt: "Level 10 + badge '66 Hari'", syarat: s => s.level >= 10 && s.unlocked.includes("day66") },
+];
+
+
+// ---------------------------------------------------------------------
 //  2) STATE (keadaan sekarang)
 // ---------------------------------------------------------------------
 let state = {
@@ -128,6 +164,8 @@ let state = {
   lastLogin: "",      // tanggal terakhir klaim daily login
   expBoostDate: "",   // tanggal aktif EXP Boost (misi hari itu dobel EXP)
   theme: "blue",      // tema aktif ("blue" default / "gold" dari item)
+  skills: [],         // id skill yang sudah di-learn (efek pasif nyala)
+  lastFreezeStreak: 0,// streak terakhir saat Unbreakable kasih freeze gratis
 };
 
 
@@ -181,6 +219,8 @@ function load() {
   if (state.lastLogin === undefined) state.lastLogin = "";
   if (state.expBoostDate === undefined) state.expBoostDate = "";
   if (!state.theme)     state.theme = "blue";
+  if (!state.skills)    state.skills = [];
+  if (state.lastFreezeStreak === undefined) state.lastFreezeStreak = 0;
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -269,6 +309,86 @@ function applyStats(stats, arah) {
 
 
 // ---------------------------------------------------------------------
+//  6c) punyaSkill(id) — true kalau skill sudah di-learn.
+// ---------------------------------------------------------------------
+function punyaSkill(id) {
+  return state.skills.includes(id);
+}
+
+
+// ---------------------------------------------------------------------
+//  6d) expUntukMisi(mission)
+//  Hitung EXP akhir sebuah misi, gabungkan SEMUA bonus:
+//    - EXP Boost (item): x2 kalau aktif hari ini
+//    - Iron Body (skill): +50% kalau misi kategori Fisik
+//    - Deep Focus (skill): +50% kalau misi Mental / Build
+//    - Ascendant (skill): +25% semua misi
+//  Pengali dijumlah dulu, baru dikali ke EXP dasar, lalu dibulatkan.
+// ---------------------------------------------------------------------
+function expUntukMisi(mission) {
+  let pengali = 1;
+  if (state.expBoostDate === today()) pengali += 1;               // Boost: +100%
+  if (punyaSkill("iron_body") && mission.cat === "Fisik") pengali += 0.5;
+  if (punyaSkill("deep_focus") && (mission.cat === "Mental" || mission.cat === "Build")) pengali += 0.5;
+  if (punyaSkill("ascendant")) pengali += 0.25;
+  return Math.round(mission.exp * pengali);
+}
+
+
+// ---------------------------------------------------------------------
+//  6e) poinUntukMisi()
+//  Poin per misi + bonus skill Momentum (+2).
+// ---------------------------------------------------------------------
+function poinUntukMisi() {
+  let poin = POIN_PER_MISI;
+  if (punyaSkill("momentum")) poin += 2;
+  return poin;
+}
+
+
+// ---------------------------------------------------------------------
+//  6f) learnSkill(id)
+//  Learn skill kalau: belum punya, syarat terpenuhi, dan Poin cukup.
+//  Efeknya pasif (dibaca di helper di atas), jadi di sini cukup catat.
+// ---------------------------------------------------------------------
+function learnSkill(id) {
+  const skill = SKILLS.find(s => s.id === id);
+  if (!skill || punyaSkill(id)) return;
+
+  if (!skill.syarat(state)) {
+    toastInfo(`🔒 Syarat belum terpenuhi: ${skill.syaratTxt}`);
+    return;
+  }
+  if (state.poin < skill.harga) {
+    toastInfo(`💎 Poin kurang. Butuh ${skill.harga}, punya ${state.poin}.`);
+    return;
+  }
+
+  state.poin -= skill.harga;
+  state.skills.push(id);
+  save();
+  render();
+  toastInfo(`${skill.icon} Skill "${skill.name}" dipelajari!`);
+}
+
+
+// ---------------------------------------------------------------------
+//  6g) cekUnbreakable()
+//  Skill Unbreakable: tiap streak mencapai kelipatan 7 yang baru,
+//  kasih 1 Streak Freeze gratis. 'lastFreezeStreak' mencegah dobel.
+// ---------------------------------------------------------------------
+function cekUnbreakable() {
+  if (!punyaSkill("unbreakable")) return;
+  if (state.streak > 0 && state.streak % 7 === 0 && state.streak !== state.lastFreezeStreak) {
+    state.lastFreezeStreak = state.streak;
+    state.items.streak_freeze = (state.items.streak_freeze || 0) + 1;
+    save();
+    toastInfo("🔥 Unbreakable: +1 Streak Freeze gratis!");
+  }
+}
+
+
+// ---------------------------------------------------------------------
 //  7) toggleMission(id)
 //  Selesai -> +EXP +stat. Batal -> -EXP -stat. Lalu simpan & render.
 // ---------------------------------------------------------------------
@@ -277,22 +397,23 @@ function toggleMission(id) {
   const sudahSelesai = state.done.includes(id);
   let naikLevel = false;
 
-  // EXP Boost: kalau item EXP Boost aktif hari ini, misi kasih EXP dobel.
-  const boostAktif = state.expBoostDate === today();
-  const expMisi = boostAktif ? mission.exp * 2 : mission.exp;
+  // Hitung EXP & Poin pakai helper (biar centang & batal nilainya sama persis,
+  // termasuk semua bonus dari skill + EXP Boost).
+  const expMisi = expUntukMisi(mission);
+  const poinMisi = poinUntukMisi();
 
   if (sudahSelesai) {
     state.done = state.done.filter(x => x !== id);
     addExp(-expMisi);
     applyStats(mission.stats, -1);
-    state.poin -= POIN_PER_MISI;            // batalin: Poin ikut balik
+    state.poin -= poinMisi;                 // batalin: Poin ikut balik
     if (state.poin < 0) state.poin = 0;
   } else {
     state.done.push(id);
     state.totalDone += 1; // hitung total misi kelar sepanjang masa
     naikLevel = addExp(expMisi); // simpan apakah naik level
     applyStats(mission.stats, +1);
-    state.poin += POIN_PER_MISI;            // tiap misi kelar = +Poin
+    state.poin += poinMisi;                 // tiap misi kelar = +Poin
   }
 
   if (state.exp < 0) state.exp = 0;
@@ -504,7 +625,62 @@ function render() {
   renderHistory();
   checkAchievements();
   renderAchievements();
+  cekUnbreakable();   // skill Unbreakable kasih freeze gratis tiap streak x7
+  renderSkills();
   renderShop();
+}
+
+
+// ---------------------------------------------------------------------
+//  8h) renderSkills()  — gambar daftar skill + status.
+//  3 kondisi tampilan:
+//    - sudah di-learn  -> "Dikuasai" (nyala)
+//    - kebuka & mampu   -> tombol Learn aktif
+//    - terkunci/kurang  -> tombol nonaktif + teks syarat
+// ---------------------------------------------------------------------
+function renderSkills() {
+  const box = document.getElementById("skill-list");
+  if (!box) return;
+  box.innerHTML = "";
+
+  const dikuasai = state.skills.length;
+  const elCount = document.getElementById("skill-count");
+  if (elCount) elCount.textContent = dikuasai + " / " + SKILLS.length;
+
+  SKILLS.forEach(skill => {
+    const punya = punyaSkill(skill.id);
+    const kebuka = skill.syarat(state);
+    const mampu = state.poin >= skill.harga;
+
+    const row = document.createElement("div");
+    row.className = "skill-item" + (punya ? " learned" : (kebuka ? "" : " locked"));
+
+    // Tentukan tombol / status.
+    let aksi;
+    if (punya) {
+      aksi = `<span class="skill-status">✓ Dikuasai</span>`;
+    } else if (!kebuka) {
+      aksi = `<span class="skill-req">🔒 ${skill.syaratTxt}</span>`;
+    } else if (!mampu) {
+      aksi = `<button class="learn" disabled>💎 ${skill.harga}</button>`;
+    } else {
+      aksi = `<button class="learn" data-skill="${skill.id}">💎 ${skill.harga}</button>`;
+    }
+
+    row.innerHTML = `
+      <div class="skill-icon">${skill.icon}</div>
+      <div class="skill-info">
+        <div class="skill-name">${skill.name}</div>
+        <div class="skill-desc">${skill.desc}</div>
+      </div>
+      ${aksi}
+    `;
+    box.appendChild(row);
+  });
+
+  box.querySelectorAll("[data-skill]").forEach(btn => {
+    btn.addEventListener("click", () => learnSkill(btn.getAttribute("data-skill")));
+  });
 }
 
 
