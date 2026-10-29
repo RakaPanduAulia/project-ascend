@@ -208,6 +208,21 @@ function expNeeded(level) {
 
 
 // ---------------------------------------------------------------------
+//  4b) expTerkumpul()  — total EXP sepanjang masa.
+//  Level naik tiap kelipatan (level x 100), jadi EXP total =
+//  semua EXP yang sudah "dipakai" buat naik level + EXP sisa sekarang.
+//  Dipakai buat grafik progres (garis yang terus naik).
+// ---------------------------------------------------------------------
+function expTerkumpul() {
+  let total = state.exp;
+  for (let lv = 1; lv < state.level; lv++) {
+    total += expNeeded(lv);
+  }
+  return total;
+}
+
+
+// ---------------------------------------------------------------------
 //  5) save() / load()  — simpan & baca state dari localStorage browser.
 // ---------------------------------------------------------------------
 function save() {
@@ -224,6 +239,12 @@ function load() {
   if (!state.startDate) state.startDate = state.date || today();
   if (state.streak === undefined) state.streak = 0;
   if (!state.history)   state.history = [];
+  // Backfill: entri history lama cuma punya {date, kelar}. Kasih level &
+  // expTotal default 0 biar grafik gak error baca field yang gak ada.
+  state.history.forEach(h => {
+    if (h.level === undefined)    h.level = 0;
+    if (h.expTotal === undefined) h.expTotal = 0;
+  });
   if (!state.unlocked)  state.unlocked = [];
   if (state.totalDone === undefined) state.totalDone = 0;
   if (state.poin === undefined) state.poin = 0;
@@ -255,8 +276,14 @@ function load() {
 function rolloverDay() {
   const kelarKemarin = state.done.length;
 
-  // 1) Arsipkan hari kemarin.
-  state.history.push({ date: state.date, kelar: kelarKemarin });
+  // 1) Arsipkan hari kemarin — simpan snapshot lengkap biar bisa dibikin grafik:
+  //    jumlah misi kelar, level, dan total EXP terkumpul saat itu.
+  state.history.push({
+    date: state.date,
+    kelar: kelarKemarin,
+    level: state.level,
+    expTotal: expTerkumpul(),
+  });
   // Simpan paling banyak 60 hari terakhir biar gak kebanyakan.
   if (state.history.length > 60) {
     state.history = state.history.slice(-60);
@@ -640,6 +667,7 @@ function render() {
   }
 
   renderHistory();
+  renderChart();
   checkAchievements();
   renderAchievements();
   cekUnbreakable();   // skill Unbreakable kasih freeze gratis tiap streak x7
@@ -801,6 +829,72 @@ function toastAchievement(a) {
   toast.innerHTML = `${a.icon} Achievement: <b>${a.name}</b>`;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+
+// ---------------------------------------------------------------------
+//  8c-chart) renderChart()
+//  Gambar grafik garis progres EXP pakai SVG murni (tanpa library).
+//  Datanya dari 'history' (tiap hari punya expTotal) + titik HARI INI.
+//  Cara kerja singkat: cari EXP tertinggi, lalu tiap hari dipetakan
+//  jadi koordinat x (kiri->kanan) & y (bawah=0, atas=tertinggi).
+// ---------------------------------------------------------------------
+function renderChart() {
+  const box = document.getElementById("chart-box");
+  if (!box) return;
+
+  // Susun titik-titik: tiap hari di history + hari ini (titik terbaru).
+  const titik = state.history.map(h => ({ label: h.date, exp: h.expTotal }));
+  titik.push({ label: today(), exp: expTerkumpul() });
+
+  // Butuh minimal 2 titik biar bisa narik garis.
+  if (titik.length < 2) {
+    box.innerHTML = `<div class="chart-empty">📈 Grafik muncul setelah kamu pakai app beberapa hari. Terus jalan!</div>`;
+    return;
+  }
+
+  // Ambil paling banyak 14 titik terakhir biar grafik gak sesak.
+  const data = titik.slice(-14);
+
+  // Ukuran kanvas grafik (koordinat internal SVG).
+  const W = 300, H = 120, pad = 8;
+  const maxExp = Math.max(...data.map(d => d.exp), 1); // hindari bagi 0
+
+  // Petakan tiap titik jadi koordinat x,y di dalam kanvas.
+  const koord = data.map((d, i) => {
+    const x = pad + (i / (data.length - 1)) * (W - pad * 2);
+    const y = H - pad - (d.exp / maxExp) * (H - pad * 2);
+    return { x, y, exp: d.exp };
+  });
+
+  // Buat string "x,y x,y ..." buat <polyline> (garis) dan area di bawahnya.
+  const garis = koord.map(k => `${k.x.toFixed(1)},${k.y.toFixed(1)}`).join(" ");
+  const area = `${pad},${H - pad} ${garis} ${(W - pad)},${H - pad}`;
+
+  // Lingkaran kecil di tiap titik.
+  const dots = koord.map(k =>
+    `<circle cx="${k.x.toFixed(1)}" cy="${k.y.toFixed(1)}" r="2.5" fill="#7fd0ff" />`
+  ).join("");
+
+  box.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="none">
+      <polygon points="${area}" fill="url(#chart-grad)" opacity="0.25" />
+      <polyline points="${garis}" fill="none" stroke="#1f47e8" stroke-width="2"
+                stroke-linejoin="round" stroke-linecap="round" />
+      ${dots}
+      <defs>
+        <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1f47e8" />
+          <stop offset="100%" stop-color="#1f47e8" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="chart-foot">
+      <span>${data[0].label}</span>
+      <span class="chart-max">Total EXP: ${expTerkumpul()}</span>
+      <span>${data[data.length - 1].label}</span>
+    </div>
+  `;
 }
 
 

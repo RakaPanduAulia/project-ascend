@@ -873,3 +873,48 @@ body {
     transition: none;
   }
 }
+
+
+/* ===== Tahap 12: Grafik Progres ===== */
+.chart-box {
+  margin-top: 12px;
+}
+.chart-svg {
+  width: 100%;
+  height: 140px;
+  display: block;
+  background: #0b1430;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.chart-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8a97c2;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+.chart-max {
+  color: #7fd0ff;
+  font-weight: 700;
+}
+.chart-empty {
+  background: #0f1733;
+  border: 1px dashed #1a3a8a;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #8a97c2;
+  line-height: 1.5;
+}
+body.theme-gold .chart-svg {
+  border-color: #b8860b;
+}
+body.theme-gold .chart-max {
+  color: #f5c518;
+}
