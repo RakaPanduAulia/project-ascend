@@ -172,6 +172,9 @@ let state = {
   jurnal: "",         // catatan jurnal HARI INI
   jurnalBonusDate: "",// tanggal terakhir dapat bonus Poin dari nulis jurnal
   weekly: { minggu: "", progress: {}, selesai: [] }, // challenge mingguan
+  reminderOn: false,  // reminder harian nyala/mati
+  reminderJam: "20:00", // jam reminder "HH:MM"
+  reminderTanggal: "",  // tanggal terakhir reminder sudah bunyi (anti-dobel)
 };
 
 
@@ -306,6 +309,9 @@ function load() {
   if (state.jurnal === undefined)        state.jurnal = "";
   if (state.jurnalBonusDate === undefined) state.jurnalBonusDate = "";
   if (!state.weekly) state.weekly = { minggu: "", progress: {}, selesai: [] };
+  if (state.reminderOn === undefined)   state.reminderOn = false;
+  if (!state.reminderJam)               state.reminderJam = "20:00";
+  if (state.reminderTanggal === undefined) state.reminderTanggal = "";
 
   // Reset challenge mingguan kalau sudah masuk minggu baru (cap Senin beda).
   cekResetMingguan();
@@ -803,6 +809,7 @@ function render() {
   renderChart();
   renderJurnal();
   renderWeekly();
+  renderReminder();
   checkAchievements();
   renderAchievements();
   cekUnbreakable();   // skill Unbreakable kasih freeze gratis tiap streak x7
@@ -1241,7 +1248,93 @@ applyTheme();        // pasang tema (emas kalau sudah dibeli)
 claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
 setupNav();          // aktifkan navigasi tab bawah
 setupJurnal();       // sambungkan textarea jurnal
+setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
 render();
+
+
+// ---------------------------------------------------------------------
+//  REMINDER (Tahap 15) — pengingat harian dalam-app.
+//  Catatan jujur: ini notifikasi BROWSER (butuh tab app kebuka/di
+//  background). Notif push walau app ketutup butuh PWA + server —
+//  itu tahap berikutnya. Di sini kita bikin pondasinya dulu.
+// ---------------------------------------------------------------------
+
+// Minta izin notifikasi ke browser (muncul popup izin sekali).
+function mintaIzinNotif() {
+  if (!("Notification" in window)) {
+    toastInfo("Browser ini gak dukung notifikasi.");
+    return Promise.resolve("unsupported");
+  }
+  return Notification.requestPermission();
+}
+
+// Tampilkan notifikasi (kalau diizinkan) + toast dalam-app sebagai cadangan.
+function bunyikanReminder(teks) {
+  if (("Notification" in window) && Notification.permission === "granted") {
+    new Notification("Ascend — Pengingat", { body: teks });
+  }
+  toastInfo("⏰ " + teks); // selalu tampilkan toast juga, jaga-jaga
+}
+
+// Cek tiap menit: kalau jam sekarang == jam reminder, hari ini belum
+// bunyi, dan masih ada misi belum kelar -> bunyikan.
+function cekReminder() {
+  if (!state.reminderOn) return;
+
+  const now = new Date();
+  const jamNow = String(now.getHours()).padStart(2, "0") + ":" +
+                 String(now.getMinutes()).padStart(2, "0");
+
+  if (jamNow === state.reminderJam && state.reminderTanggal !== today()) {
+    state.reminderTanggal = today(); // tandai sudah bunyi hari ini
+    save();
+    const sisa = MISSIONS.length - state.done.length;
+    if (sisa > 0) {
+      bunyikanReminder(`Masih ada ${sisa} misi belum kelar hari ini. Ayo gas! 💪`);
+    } else {
+      bunyikanReminder("Semua misi kelar hari ini. Mantap! 🔥");
+    }
+  }
+}
+
+// Gambar setting reminder (toggle + input jam) di tab Lainnya.
+function renderReminder() {
+  const toggle = document.getElementById("reminder-toggle");
+  const jam = document.getElementById("reminder-jam");
+  if (!toggle || !jam) return;
+  toggle.checked = state.reminderOn;
+  jam.value = state.reminderJam;
+}
+
+// Sambungkan kontrol reminder + jalankan pengecek tiap menit.
+function setupReminder() {
+  const toggle = document.getElementById("reminder-toggle");
+  const jam = document.getElementById("reminder-jam");
+  if (!toggle || !jam) return;
+
+  toggle.addEventListener("change", async () => {
+    if (toggle.checked) {
+      // Minta izin dulu waktu user nyalain.
+      const izin = await mintaIzinNotif();
+      if (izin === "denied") {
+        toastInfo("Izin notif ditolak. Pengingat tetap muncul via toast dalam app.");
+      }
+    }
+    state.reminderOn = toggle.checked;
+    save();
+    toastInfo(toggle.checked ? "⏰ Reminder nyala" : "Reminder dimatikan");
+  });
+
+  jam.addEventListener("change", () => {
+    state.reminderJam = jam.value || "20:00";
+    state.reminderTanggal = ""; // boleh bunyi lagi kalau jam diubah
+    save();
+    toastInfo("Jam reminder: " + state.reminderJam);
+  });
+
+  // Jalankan pengecek tiap 30 detik (cukup untuk presisi menit).
+  setInterval(cekReminder, 30 * 1000);
+}
 
 
 // ---------------------------------------------------------------------
