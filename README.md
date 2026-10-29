@@ -17,7 +17,10 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 10 (sekarang):** Touch-up + multi-halaman — tiap bagian jadi kartu rapi, variabel warna terpusat, DAN navigasi tab bawah (SPA): Home (stat/EXP/poin/streak + misi utama), Gizi, Skill, Shop, Lainnya (achievement + riwayat). 1 file HTML, halaman diganti via JS.
 
 ## Opsional ke depan
-- **Tahap 11 (opsional):** AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
+- **Tahap 12:** Grafik progres — garis EXP total naik dari hari ke hari (SVG murni, tanpa library), di tab Lainnya. History tiap hari sekarang menyimpan snapshot level + total EXP.
+
+## Opsional lanjut
+- AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
 
 ## Cara buka
 Buka `index.html` di browser. Gak perlu install apa-apa.
