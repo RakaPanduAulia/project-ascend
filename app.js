@@ -171,6 +171,7 @@ let state = {
   giziBonusDate: "",  // tanggal terakhir dapat bonus Poin dari protein
   jurnal: "",         // catatan jurnal HARI INI
   jurnalBonusDate: "",// tanggal terakhir dapat bonus Poin dari nulis jurnal
+  weekly: { minggu: "", progress: {}, selesai: [] }, // challenge mingguan
 };
 
 
@@ -181,6 +182,49 @@ const GIZI_INFO = [
   { key: "protein", icon: "🍗", label: "Protein", unit: "g" },
   { key: "air",     icon: "💧", label: "Air",     unit: "ml" },
 ];
+
+
+// ---------------------------------------------------------------------
+//  1f) WEEKLIES — challenge mingguan (target 7 hari, hadiah besar).
+//  Tiap challenge:
+//    id      = penanda unik
+//    icon    = emoji
+//    name    = nama
+//    desc    = penjelasan
+//    target  = angka yang harus dicapai minggu ini
+//    poin    = hadiah Poin
+//    exp     = hadiah EXP
+//    hitung(mission) = true kalau misi harian yang dikelar menambah
+//                      progress challenge ini. (streak dihitung terpisah)
+//  Progress disimpan di state.weekly.progress[id], reset tiap Senin.
+// ---------------------------------------------------------------------
+const WEEKLIES = [
+  { id: "fisik_15", icon: "🏋️", name: "Konsisten Fisik", target: 15, poin: 50, exp: 30,
+    desc: "Kelar 15 misi Fisik minggu ini.",
+    hitung: m => m.cat === "Fisik" },
+
+  { id: "otak_12", icon: "🧠", name: "Otak Terasah", target: 12, poin: 50, exp: 30,
+    desc: "Kelar 12 misi Mental / Build minggu ini.",
+    hitung: m => m.cat === "Mental" || m.cat === "Build" },
+
+  { id: "rajin_30", icon: "⭐", name: "Produktif Total", target: 30, poin: 60, exp: 40,
+    desc: "Kelar 30 misi apa saja minggu ini.",
+    hitung: m => true },
+];
+
+
+// ---------------------------------------------------------------------
+//  1g) seninMingguIni()  — tanggal "YYYY-MM-DD" hari Senin minggu ini.
+//  Dipakai sebagai "cap minggu": kalau cap berubah, berarti minggu baru
+//  dan progress challenge di-reset. getDay(): 0=Minggu..6=Sabtu.
+// ---------------------------------------------------------------------
+function seninMingguIni() {
+  const d = new Date(today());
+  const hari = d.getDay();            // 0=Minggu, 1=Senin, ...
+  const mundur = hari === 0 ? 6 : hari - 1; // mundur ke Senin
+  d.setDate(d.getDate() - mundur);
+  return d.toISOString().slice(0, 10);
+}
 
 
 // ---------------------------------------------------------------------
@@ -261,6 +305,10 @@ function load() {
   if (state.giziBonusDate === undefined) state.giziBonusDate = "";
   if (state.jurnal === undefined)        state.jurnal = "";
   if (state.jurnalBonusDate === undefined) state.jurnalBonusDate = "";
+  if (!state.weekly) state.weekly = { minggu: "", progress: {}, selesai: [] };
+
+  // Reset challenge mingguan kalau sudah masuk minggu baru (cap Senin beda).
+  cekResetMingguan();
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -438,6 +486,83 @@ function cekUnbreakable() {
 
 
 // ---------------------------------------------------------------------
+//  6h) cekResetMingguan()
+//  Kalau cap minggu (Senin) sudah beda, mulai minggu baru:
+//  progress challenge balik 0 dan daftar 'selesai' dikosongkan.
+// ---------------------------------------------------------------------
+function cekResetMingguan() {
+  const minggu = seninMingguIni();
+  if (state.weekly.minggu !== minggu) {
+    state.weekly.minggu = minggu;
+    state.weekly.progress = {};
+    state.weekly.selesai = [];
+    save();
+  }
+}
+
+
+// ---------------------------------------------------------------------
+//  6i) tambahProgressMingguan(mission, arah)
+//  Dipanggil tiap misi harian dicentang/dibatalkan. Tambah/kurang
+//  progress tiap challenge yang cocok. Kalau target kecapai & belum
+//  diklaim, kasih hadiah (Poin + EXP) sekali.
+//    arah = +1 (centang) / -1 (batal)
+// ---------------------------------------------------------------------
+function tambahProgressMingguan(mission, arah) {
+  cekResetMingguan(); // jaga-jaga minggu berganti saat app kebuka lama
+
+  WEEKLIES.forEach(w => {
+    if (!w.hitung(mission)) return;
+
+    const sekarang = state.weekly.progress[w.id] || 0;
+    let baru = sekarang + arah;
+    if (baru < 0) baru = 0;
+    state.weekly.progress[w.id] = baru;
+
+    // Target kecapai & belum pernah diklaim minggu ini -> kasih hadiah.
+    const sudahKlaim = state.weekly.selesai.includes(w.id);
+    if (!sudahKlaim && baru >= w.target) {
+      state.weekly.selesai.push(w.id);
+      state.poin += w.poin;
+      addExp(w.exp);
+      toastInfo(`${w.icon} Challenge "${w.name}" selesai! +${w.poin} 💎 +${w.exp} EXP`);
+    }
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  8m) renderWeekly()  — gambar daftar challenge mingguan + progress bar.
+// ---------------------------------------------------------------------
+function renderWeekly() {
+  const box = document.getElementById("weekly-list");
+  if (!box) return;
+  box.innerHTML = "";
+
+  WEEKLIES.forEach(w => {
+    const nilai = state.weekly.progress[w.id] || 0;
+    const selesai = state.weekly.selesai.includes(w.id);
+    const persen = Math.min(100, Math.round((nilai / w.target) * 100));
+
+    const row = document.createElement("div");
+    row.className = "weekly-item" + (selesai ? " selesai" : "");
+    row.innerHTML = `
+      <div class="weekly-head">
+        <span class="weekly-name">${w.icon} ${w.name}${selesai ? " ✓" : ""}</span>
+        <span class="weekly-reward">+${w.poin}💎 +${w.exp}EXP</span>
+      </div>
+      <div class="weekly-desc">${w.desc}</div>
+      <div class="weekly-track">
+        <div class="weekly-fill${selesai ? " done" : ""}" style="width:${persen}%;"></div>
+      </div>
+      <div class="weekly-num">${Math.min(nilai, w.target)} / ${w.target}</div>
+    `;
+    box.appendChild(row);
+  });
+}
+
+
+// ---------------------------------------------------------------------
 //  7) toggleMission(id)
 //  Selesai -> +EXP +stat. Batal -> -EXP -stat. Lalu simpan & render.
 // ---------------------------------------------------------------------
@@ -457,12 +582,14 @@ function toggleMission(id) {
     applyStats(mission.stats, -1);
     state.poin -= poinMisi;                 // batalin: Poin ikut balik
     if (state.poin < 0) state.poin = 0;
+    tambahProgressMingguan(mission, -1);    // batalin progress challenge
   } else {
     state.done.push(id);
     state.totalDone += 1; // hitung total misi kelar sepanjang masa
     naikLevel = addExp(expMisi); // simpan apakah naik level
     applyStats(mission.stats, +1);
     state.poin += poinMisi;                 // tiap misi kelar = +Poin
+    tambahProgressMingguan(mission, +1);    // tambah progress challenge
   }
 
   if (state.exp < 0) state.exp = 0;
@@ -675,6 +802,7 @@ function render() {
   renderHistory();
   renderChart();
   renderJurnal();
+  renderWeekly();
   checkAchievements();
   renderAchievements();
   cekUnbreakable();   // skill Unbreakable kasih freeze gratis tiap streak x7
