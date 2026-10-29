@@ -248,12 +248,27 @@ body {
 
 .history-row {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
   padding: 11px 14px;
   background: #0f1733;
   border: 1px solid #1a3a8a;
   border-radius: 10px;
   font-size: 14px;
+}
+.history-top {
+  display: flex;
+  justify-content: space-between;
+}
+.history-note {
+  font-size: 13px;
+  color: #b8c2e8;
+  opacity: 0.9;
+  line-height: 1.4;
+  padding-top: 2px;
+  border-top: 1px solid rgba(26, 58, 138, 0.4);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .history-date {
@@ -917,4 +932,40 @@ body.theme-gold .chart-svg {
 }
 body.theme-gold .chart-max {
   color: #f5c518;
+}
+
+
+/* ===== Tahap 13: Jurnal Harian ===== */
+.jurnal-hint {
+  font-size: 12px;
+  color: #8a97c2;
+  margin: 2px 0 10px;
+  line-height: 1.4;
+}
+.jurnal-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  color: #e8eaf4;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 90px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.jurnal-input::placeholder {
+  color: #5a6894;
+}
+.jurnal-input:focus {
+  outline: none;
+  border-color: #1f47e8;
+  box-shadow: 0 0 12px rgba(31, 71, 232, 0.35);
+}
+body.theme-gold .jurnal-input:focus {
+  border-color: #f5c518;
+  box-shadow: 0 0 12px rgba(245, 197, 24, 0.35);
 }
