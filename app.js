@@ -169,6 +169,8 @@ let state = {
   gizi: { kalori: 0, protein: 0, air: 0 },          // asupan HARI INI
   giziTarget: { kalori: 2200, protein: 120, air: 2500 }, // target harian
   giziBonusDate: "",  // tanggal terakhir dapat bonus Poin dari protein
+  jurnal: "",         // catatan jurnal HARI INI
+  jurnalBonusDate: "",// tanggal terakhir dapat bonus Poin dari nulis jurnal
 };
 
 
@@ -257,6 +259,8 @@ function load() {
   if (!state.gizi)       state.gizi = { kalori: 0, protein: 0, air: 0 };
   if (!state.giziTarget) state.giziTarget = { kalori: 2200, protein: 120, air: 2500 };
   if (state.giziBonusDate === undefined) state.giziBonusDate = "";
+  if (state.jurnal === undefined)        state.jurnal = "";
+  if (state.jurnalBonusDate === undefined) state.jurnalBonusDate = "";
 
   // Ganti hari -> arsipkan hari kemarin, hitung streak, reset centang.
   if (state.date !== today()) {
@@ -277,12 +281,13 @@ function rolloverDay() {
   const kelarKemarin = state.done.length;
 
   // 1) Arsipkan hari kemarin — simpan snapshot lengkap biar bisa dibikin grafik:
-  //    jumlah misi kelar, level, dan total EXP terkumpul saat itu.
+  //    jumlah misi kelar, level, total EXP, dan catatan jurnal hari itu.
   state.history.push({
     date: state.date,
     kelar: kelarKemarin,
     level: state.level,
     expTotal: expTerkumpul(),
+    jurnal: state.jurnal || "",
   });
   // Simpan paling banyak 60 hari terakhir biar gak kebanyakan.
   if (state.history.length > 60) {
@@ -304,6 +309,7 @@ function rolloverDay() {
   state.done = [];
   state.date = today();
   state.gizi = { kalori: 0, protein: 0, air: 0 }; // asupan balik 0 tiap hari baru
+  state.jurnal = ""; // catatan jurnal balik kosong tiap hari baru
   save();
 }
 
@@ -668,6 +674,7 @@ function render() {
 
   renderHistory();
   renderChart();
+  renderJurnal();
   checkAchievements();
   renderAchievements();
   cekUnbreakable();   // skill Unbreakable kasih freeze gratis tiap streak x7
@@ -833,6 +840,40 @@ function toastAchievement(a) {
 
 
 // ---------------------------------------------------------------------
+//  8c-jurnal) simpanJurnal(teks) & renderJurnal()
+//  Jurnal harian: user nulis 1 catatan per hari. Nyimpen catatan pertama
+//  kali hari ini kasih bonus +5 Poin (sekali/hari). Catatan ikut
+//  diarsipkan ke history pas ganti hari (lihat rolloverDay).
+// ---------------------------------------------------------------------
+function simpanJurnal(teks) {
+  const kosongSebelumnya = !state.jurnal || state.jurnal.trim() === "";
+  state.jurnal = teks;
+
+  // Bonus: pertama kali nulis jurnal hari ini (dari kosong -> ada isi).
+  if (kosongSebelumnya
+      && teks.trim() !== ""
+      && state.jurnalBonusDate !== today()) {
+    state.jurnalBonusDate = today();
+    state.poin += 5;
+    toastInfo("📓 Jurnal tersimpan! +5 💎");
+  }
+  save();
+  // Update label poin di header tanpa gambar ulang semua (biar kursor
+  // di textarea gak kabur saat ngetik).
+  const pl = document.getElementById("poin-label");
+  if (pl) pl.textContent = "💎 " + state.poin;
+}
+
+function renderJurnal() {
+  const area = document.getElementById("jurnal-input");
+  if (!area) return;
+  // Isi textarea dengan catatan hari ini (hanya kalau beda, biar gak
+  // reset kursor saat user sedang mengetik).
+  if (area.value !== state.jurnal) area.value = state.jurnal;
+}
+
+
+// ---------------------------------------------------------------------
 //  8c-chart) renderChart()
 //  Gambar grafik garis progres EXP pakai SVG murni (tanpa library).
 //  Datanya dari 'history' (tiap hari punya expTotal) + titik HARI INI.
@@ -916,12 +957,32 @@ function renderHistory() {
   state.history.slice().reverse().forEach(hari => {
     const row = document.createElement("div");
     row.className = "history-row";
+    // Kalau hari itu ada catatan jurnal, tampilkan di bawah tanggal.
+    const catatan = (hari.jurnal && hari.jurnal.trim() !== "")
+      ? `<div class="history-note">📓 ${escapeHtml(hari.jurnal)}</div>` : "";
     row.innerHTML = `
-      <span class="history-date">${hari.date}</span>
-      <span class="history-count">${hari.kelar} misi</span>
+      <div class="history-top">
+        <span class="history-date">${hari.date}</span>
+        <span class="history-count">${hari.kelar} misi</span>
+      </div>
+      ${catatan}
     `;
     box.appendChild(row);
   });
+}
+
+
+// ---------------------------------------------------------------------
+//  8c-esc) escapeHtml(teks)
+//  Ubah karakter spesial (<, >, &, ") jadi aman buat ditaruh di HTML.
+//  Penting: catatan jurnal ditulis user, jangan sampai bisa nyuntik HTML.
+// ---------------------------------------------------------------------
+function escapeHtml(teks) {
+  return String(teks)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 
@@ -1051,4 +1112,21 @@ load();
 applyTheme();        // pasang tema (emas kalau sudah dibeli)
 claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
 setupNav();          // aktifkan navigasi tab bawah
+setupJurnal();       // sambungkan textarea jurnal
 render();
+
+
+// ---------------------------------------------------------------------
+//  setupJurnal()  — simpan jurnal otomatis tiap user selesai mengetik.
+//  Pakai event 'input' + sedikit debounce biar gak nyimpen tiap huruf.
+// ---------------------------------------------------------------------
+function setupJurnal() {
+  const area = document.getElementById("jurnal-input");
+  if (!area) return;
+  let timer = null;
+  area.addEventListener("input", () => {
+    clearTimeout(timer);
+    // Tunggu 500ms setelah ketikan terakhir baru simpan.
+    timer = setTimeout(() => simpanJurnal(area.value), 500);
+  });
+}
