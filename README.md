@@ -19,6 +19,7 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 ## Opsional ke depan
 - **Tahap 12:** Grafik progres — garis EXP total naik dari hari ke hari (SVG murni, tanpa library), di tab Lainnya. History tiap hari sekarang menyimpan snapshot level + total EXP.
 - **Tahap 13:** Jurnal harian — tulis 1 catatan refleksi per hari di Home, bonus +5 💎 pertama kali nulis. Catatan ikut diarsipkan ke riwayat (teks user di-escape biar aman).
+- **Tahap 14:** Misi mingguan (challenge) — 3 challenge target 7 hari (Konsisten Fisik, Otak Terasah, Produktif Total), progress naik otomatis tiap misi harian kelar, hadiah Poin + EXP besar saat target tercapai. Reset tiap Senin.
 
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.

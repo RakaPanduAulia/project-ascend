@@ -969,3 +969,79 @@ body.theme-gold .jurnal-input:focus {
   border-color: #f5c518;
   box-shadow: 0 0 12px rgba(245, 197, 24, 0.35);
 }
+
+
+/* ===== Tahap 14: Challenge Mingguan ===== */
+.weekly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.weekly-item {
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.weekly-item.selesai {
+  border-color: #1f47e8;
+  box-shadow: 0 0 12px rgba(31, 71, 232, 0.3);
+}
+.weekly-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.weekly-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.weekly-reward {
+  font-size: 11px;
+  color: #7fd0ff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.weekly-desc {
+  font-size: 12px;
+  color: #8a97c2;
+  margin-bottom: 9px;
+  line-height: 1.4;
+}
+.weekly-track {
+  height: 9px;
+  background: #0b1a4d;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+.weekly-fill {
+  height: 100%;
+  background: #4d6bff;
+  transition: width 0.3s ease;
+}
+.weekly-fill.done {
+  background: linear-gradient(90deg, #1f47e8, #7fd0ff);
+}
+.weekly-num {
+  font-size: 11px;
+  color: #8a97c2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+body.theme-gold .weekly-item.selesai {
+  border-color: #f5c518;
+  box-shadow: 0 0 12px rgba(245, 197, 24, 0.3);
+}
+body.theme-gold .weekly-reward {
+  color: #f5c518;
+}
+body.theme-gold .weekly-fill {
+  background: #b8860b;
+}
+body.theme-gold .weekly-fill.done {
+  background: linear-gradient(90deg, #b8860b, #f5c518);
+}
