@@ -21,6 +21,7 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 13:** Jurnal harian — tulis 1 catatan refleksi per hari di Home, bonus +5 💎 pertama kali nulis. Catatan ikut diarsipkan ke riwayat (teks user di-escape biar aman).
 - **Tahap 14:** Misi mingguan (challenge) — 3 challenge target 7 hari (Konsisten Fisik, Otak Terasah, Produktif Total), progress naik otomatis tiap misi harian kelar, hadiah Poin + EXP besar saat target tercapai. Reset tiap Senin.
 - **Tahap 15:** Reminder harian — toggle + set jam di tab Lainnya, notifikasi browser (Notification API) + toast kalau masih ada misi belum kelar. Catatan: ini reminder dalam-app (butuh tab kebuka/background); notif push walau app ketutup butuh PWA + server (tahap PWA nanti).
+- **Tahap 16:** Edit misi sendiri — bagian "Atur Misi Sendiri" di Home. User bisa tambah misi baru (nama, kategori, EXP), hapus misi apa pun (bawaan maupun buatan sendiri), dan pulihkan ke default. Misi disimpan di `state.missions` (default jadi salinan awal lewat `misiAktif()`); misi custom otomatis ikut dihitung challenge mingguan sesuai kategorinya.
 
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
