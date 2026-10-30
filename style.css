@@ -1134,3 +1134,95 @@ body.theme-gold .switch input:checked + .slider {
     transition: none;
   }
 }
+
+
+/* ===================================================================== */
+/*  TAHAP 16 — Atur Misi Sendiri (editor di halaman Home)                */
+/* ===================================================================== */
+.misi-editor > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent, #4d6bff);
+  list-style: none;
+  padding: 2px 0;
+  user-select: none;
+}
+.misi-editor > summary::-webkit-details-marker { display: none; }
+.misi-editor > summary::before { content: "▸ "; }
+.misi-editor[open] > summary::before { content: "▾ "; }
+
+/* Form tambah misi */
+.misi-form { margin: 10px 0 14px; display: flex; flex-direction: column; gap: 8px; }
+.misi-input,
+.misi-select,
+.misi-exp-input {
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #e8eaf4;
+  font-size: 14px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-family: inherit;
+}
+.misi-form-row { display: flex; gap: 8px; }
+.misi-select { flex: 1; }
+.misi-exp-input { width: 72px; }
+.misi-add-btn {
+  background: #1f47e8;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.misi-add-btn:hover { background: #2a52f0; }
+
+/* Daftar misi + tombol hapus */
+.misi-editor-list { display: flex; flex-direction: column; gap: 7px; }
+.misi-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 10px;
+}
+.misi-edit-name { flex: 1; font-size: 13px; }
+.misi-edit-exp { font-size: 12px; color: #4d6bff; font-weight: 700; }
+.misi-del {
+  background: transparent;
+  border: 1px solid #5a2030;
+  color: #ff6b8a;
+  font-size: 13px;
+  font-weight: 700;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.misi-del:hover { background: #3a141f; }
+
+.misi-reset-btn {
+  margin-top: 14px;
+  width: 100%;
+  background: #16233f;
+  color: #cdd6f4;
+  border: 1px solid #1a3a8a;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.misi-reset-btn:hover { background: #1b2d52; }
+
+/* Tema emas: ikut warnain aksen editor */
+body.theme-gold .misi-add-btn { background: #b8860b; }
+body.theme-gold .misi-add-btn:hover { background: #cf9c1a; }

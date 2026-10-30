@@ -14,7 +14,12 @@
 //    stats = hadiah stat, mis. { body: 4, discipline: 2 }
 //            (stat yang gak disebut berarti +0)
 // ---------------------------------------------------------------------
-const MISSIONS = [
+// CATATAN TAHAP 16:
+//   Daftar di bawah ini sekarang jadi DEFAULT (bukan lagi daftar kaku).
+//   Misi yang BENERAN dipakai app disimpan di state.missions, dan user bisa
+//   tambah / hapus / edit lewat halaman "Misi". Pertama kali app jalan, atau
+//   pas user klik "Pulihkan default", daftar inilah yang dipasang.
+const MISI_DEFAULT = [
   // --- 🔴 FISIK (gerakan rumahan, singkat, tanpa alat) ---
   { id: "stretch",   name: "🤸 Stretching / pemanasan 5 menit", exp: 8,  stats: { body: 2 },             cat: "Fisik" },
   { id: "pushup",    name: "💪 Push up 15x",               exp: 10, stats: { body: 3 },              cat: "Fisik" },
@@ -42,6 +47,19 @@ const MISSIONS = [
 
 // Urutan kategori buat ditampilkan (misi dikelompokkan per kategori).
 const CATEGORIES = ["Fisik", "Perawatan", "Mental", "Build"];
+
+
+// ---------------------------------------------------------------------
+//  1c) misiAktif()  — daftar misi yang BENERAN dipakai app.
+//  Dulu kode baca 'MISSIONS' langsung. Mulai Tahap 16, misi disimpan di
+//  state.missions (bisa diubah user), jadi semua tempat baca lewat sini.
+//  Kalau karena suatu hal state.missions kosong, pakai default biar app
+//  gak pernah tampil tanpa misi sama sekali.
+// ---------------------------------------------------------------------
+function misiAktif() {
+  if (!state.missions || state.missions.length === 0) return MISI_DEFAULT;
+  return state.missions;
+}
 
 
 // Nama & warna tiap stat, buat ditampilkan. Urutannya ngikut ini.
@@ -312,6 +330,11 @@ function load() {
   if (state.reminderOn === undefined)   state.reminderOn = false;
   if (!state.reminderJam)               state.reminderJam = "20:00";
   if (state.reminderTanggal === undefined) state.reminderTanggal = "";
+  // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
+  // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
+  if (!state.missions || state.missions.length === 0) {
+    state.missions = JSON.parse(JSON.stringify(MISI_DEFAULT));
+  }
 
   // Reset challenge mingguan kalau sudah masuk minggu baru (cap Senin beda).
   cekResetMingguan();
@@ -569,11 +592,110 @@ function renderWeekly() {
 
 
 // ---------------------------------------------------------------------
+//  6j) EDIT MISI (Tahap 16) — tambah / hapus / pulihkan default.
+//  Misi hidup di state.missions. Tiap perubahan: simpan + render ulang.
+// ---------------------------------------------------------------------
+
+// Bikin id unik dari nama + angka, biar gak bentrok sama misi lain.
+function idMisiBaru() {
+  return "custom_" + Date.now().toString(36);
+}
+
+// Tambah misi baru. Param: nama (teks), cat (kategori), exp (angka).
+// Stat bonus-nya kecil & merata biar adil (gak bisa diatur user, biar simpel).
+function tambahMisi(nama, cat, exp) {
+  nama = (nama || "").trim();
+  if (!nama) { toastInfo("✏️ Nama misi gak boleh kosong."); return; }
+  if (!CATEGORIES.includes(cat)) cat = "Perawatan";
+  exp = parseInt(exp, 10);
+  if (isNaN(exp) || exp < 1) exp = 8;
+  if (exp > 50) exp = 50; // batas wajar biar gak bisa “ngecheat” EXP
+
+  // Stat bonus default per kategori (biar misi custom tetap naikin stat).
+  const statDefault = {
+    Fisik:      { body: 2 },
+    Perawatan:  { looks: 1, body: 1 },
+    Mental:     { mind: 2 },
+    Build:      { mind: 2, discipline: 1 },
+  };
+
+  state.missions.push({
+    id: idMisiBaru(),
+    name: nama,
+    exp: exp,
+    stats: statDefault[cat] || { body: 1 },
+    cat: cat,
+    custom: true, // penanda: ini misi bikinan user (boleh dihapus)
+  });
+  save();
+  render();
+  toastInfo("✅ Misi ditambahkan!");
+}
+
+// Hapus satu misi. Kalau lagi dicentang hari ini, batalin dulu efeknya
+// biar EXP/stat/poin gak nyangkut.
+function hapusMisi(id) {
+  if (state.done.includes(id)) {
+    toggleMission(id); // batalin centang -> EXP/stat/poin balik rapi
+  }
+  state.missions = state.missions.filter(m => m.id !== id);
+  save();
+  render();
+  toastInfo("🗑️ Misi dihapus.");
+}
+
+// Pulihkan daftar misi ke default (buang semua perubahan user).
+function pulihkanMisiDefault() {
+  // Batalin dulu centang hari ini biar angka gak nyangkut.
+  [...state.done].forEach(id => { if (state.done.includes(id)) toggleMission(id); });
+  state.missions = JSON.parse(JSON.stringify(MISI_DEFAULT));
+  save();
+  render();
+  toastInfo("↩️ Misi dikembalikan ke default.");
+}
+
+
+// ---------------------------------------------------------------------
+//  8n) renderMisiEditor()  — gambar daftar misi + tombol hapus, per kategori,
+//  plus baca form tambah misi. Dipanggil dari render().
+// ---------------------------------------------------------------------
+function renderMisiEditor() {
+  const box = document.getElementById("misi-editor-list");
+  if (!box) return;
+  box.innerHTML = "";
+
+  CATEGORIES.forEach(cat => {
+    const daftar = misiAktif().filter(m => m.cat === cat);
+    if (daftar.length === 0) return;
+
+    const heading = document.createElement("div");
+    heading.className = "mission-cat";
+    heading.textContent = cat;
+    box.appendChild(heading);
+
+    daftar.forEach(m => {
+      const row = document.createElement("div");
+      row.className = "misi-edit-row";
+      row.innerHTML = `
+        <div class="misi-edit-name">${escapeHtml(m.name)}</div>
+        <div class="misi-edit-exp">+${m.exp}</div>
+        <button class="misi-del" data-id="${m.id}" title="Hapus misi">✕</button>
+      `;
+      row.querySelector(".misi-del").addEventListener("click", () => {
+        if (confirm(`Hapus misi "${m.name}"?`)) hapusMisi(m.id);
+      });
+      box.appendChild(row);
+    });
+  });
+}
+
+
+// ---------------------------------------------------------------------
 //  7) toggleMission(id)
 //  Selesai -> +EXP +stat. Batal -> -EXP -stat. Lalu simpan & render.
 // ---------------------------------------------------------------------
 function toggleMission(id) {
-  const mission = MISSIONS.find(m => m.id === id);
+  const mission = misiAktif().find(m => m.id === id);
   const sudahSelesai = state.done.includes(id);
   let naikLevel = false;
 
@@ -771,7 +893,7 @@ function render() {
   // Gambar misi dikelompokkan per kategori (Fisik, Perawatan, Mental, Build).
   // Tiap kategori dikasih judul kecil dulu, baru kartu-kartu misinya.
   CATEGORIES.forEach(cat => {
-    const misiKategori = MISSIONS.filter(m => m.cat === cat);
+    const misiKategori = misiAktif().filter(m => m.cat === cat);
     if (misiKategori.length === 0) return;
 
     const heading = document.createElement("div");
@@ -794,7 +916,7 @@ function render() {
     });
   });
 
-  const total = MISSIONS.length;
+  const total = misiAktif().length;
   const kelar = state.done.length;
   const pep = document.getElementById("pep-talk");
   if (kelar === 0) {
@@ -809,6 +931,7 @@ function render() {
   renderChart();
   renderJurnal();
   renderWeekly();
+  renderMisiEditor();
   renderReminder();
   checkAchievements();
   renderAchievements();
@@ -1249,7 +1372,42 @@ claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
 setupNav();          // aktifkan navigasi tab bawah
 setupJurnal();       // sambungkan textarea jurnal
 setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
+setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
 render();
+
+
+// ---------------------------------------------------------------------
+//  setupMisiForm() — sambungkan form "tambah misi" + tombol pulihkan default
+//  di halaman Misi. Baca input nama/kategori/exp, panggil tambahMisi().
+// ---------------------------------------------------------------------
+function setupMisiForm() {
+  const btnTambah = document.getElementById("misi-add-btn");
+  const inpNama   = document.getElementById("misi-nama");
+  const selCat    = document.getElementById("misi-cat");
+  const inpExp    = document.getElementById("misi-exp");
+  const btnReset  = document.getElementById("misi-reset-btn");
+
+  if (btnTambah) {
+    btnTambah.addEventListener("click", () => {
+      tambahMisi(inpNama.value, selCat.value, inpExp.value);
+      inpNama.value = "";   // kosongin lagi biar siap nambah berikutnya
+      inpExp.value = "";
+    });
+  }
+  // Enter di kolom nama = langsung tambah (biar cepet).
+  if (inpNama) {
+    inpNama.addEventListener("keydown", e => {
+      if (e.key === "Enter" && btnTambah) btnTambah.click();
+    });
+  }
+  if (btnReset) {
+    btnReset.addEventListener("click", () => {
+      if (confirm("Pulihkan semua misi ke default? Misi buatanmu akan hilang.")) {
+        pulihkanMisiDefault();
+      }
+    });
+  }
+}
 
 
 // ---------------------------------------------------------------------
@@ -1288,7 +1446,7 @@ function cekReminder() {
   if (jamNow === state.reminderJam && state.reminderTanggal !== today()) {
     state.reminderTanggal = today(); // tandai sudah bunyi hari ini
     save();
-    const sisa = MISSIONS.length - state.done.length;
+    const sisa = misiAktif().length - state.done.length;
     if (sisa > 0) {
       bunyikanReminder(`Masih ada ${sisa} misi belum kelar hari ini. Ayo gas! 💪`);
     } else {
