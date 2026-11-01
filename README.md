@@ -23,6 +23,10 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 15:** Reminder harian — toggle + set jam di tab Lainnya, notifikasi browser (Notification API) + toast kalau masih ada misi belum kelar. Catatan: ini reminder dalam-app (butuh tab kebuka/background); notif push walau app ketutup butuh PWA + server (tahap PWA nanti).
 - **Tahap 16:** Edit misi sendiri — bagian "Atur Misi Sendiri" di Home. User bisa tambah misi baru (nama, kategori, EXP), hapus misi apa pun (bawaan maupun buatan sendiri), dan pulihkan ke default. Misi disimpan di `state.missions` (default jadi salinan awal lewat `misiAktif()`); misi custom otomatis ikut dihitung challenge mingguan sesuai kategorinya.
 - **Tahap 18:** Backup & restore data — bagian "Backup Data" di tab Lainnya. Export semua data (`state`) ke file `ascend-backup-YYYY-MM-DD.json`; import baca file, validasi (cek `app:"ascend"` + field `level`), tulis ke localStorage, lalu `location.reload()` biar `load()` pasang + backfill fresh. Tanpa server.
+- **Tahap 17:** Profil & avatar — strip profil di header Home (avatar emoji + nama + gelar per level). Ketuk buka modal edit: pilih 1 dari 12 avatar + ubah nama. Gelar otomatis naik ikut level (Pemula → Monarch). Disimpan di `state.profil`.
+- **Tahap 19:** Tab Info — tab ke-6 "Info" (nav bar jadi 6). Dashboard ringkas: misi kelar, gizi %, poin, streak, level, skill, plus kartu "Fokus Sekarang" (misi terdekat yang belum kelar). Semua angka dibaca dari `state` (gak nyimpen ganda).
+- **Tahap 20:** Suara & getar — bunyi kecil (Web Audio API, nada dibuat dari kode, tanpa file) + getar HP (`navigator.vibrate`) pas misi kelar / naik level. Toggle on/off di tab Lainnya (`state.suaraOn`). Aman kalau browser gak dukung (diguard).
+- **Tahap 21:** PWA (install di HP) — `manifest.json` + `sw.js` (service worker, cache-first) + `icon.svg`. App bisa di-"install" ke layar HP & jalan offline. Registrasi SW diguard (gagal → app tetap jalan). Butuh diakses via HTTPS (GitHub Pages), bukan `file://`.
 
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.

@@ -1841,3 +1841,17 @@ function setupJurnal() {
     timer = setTimeout(() => simpanJurnal(area.value), 500);
   });
 }
+
+
+// ---------------------------------------------------------------------
+//  10) PWA (Tahap 21) — daftarkan service worker biar app bisa di-install
+//  di HP & jalan offline. Dibungkus try/catch + cek dukungan, jadi kalau
+//  browser lama gak dukung, app tetap jalan normal (cuma gak bisa install).
+// ---------------------------------------------------------------------
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      // Gagal daftar (mis. dibuka langsung dari file://) — diamkan, app tetap jalan.
+    });
+  });
+}
