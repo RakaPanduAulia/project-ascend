@@ -194,6 +194,7 @@ let state = {
   reminderJam: "20:00", // jam reminder "HH:MM"
   reminderTanggal: "",  // tanggal terakhir reminder sudah bunyi (anti-dobel)
   profil: { nama: "Hunter", avatar: "🧑" }, // Tahap 17: nama + avatar emoji
+  suaraOn: true,  // Tahap 20: bunyi + getar feedback nyala/mati
 };
 
 
@@ -424,6 +425,7 @@ function load() {
   if (!state.profil)        state.profil = { nama: "Hunter", avatar: "🧑" };
   if (!state.profil.nama)   state.profil.nama = "Hunter";
   if (!state.profil.avatar) state.profil.avatar = "🧑";
+  if (state.suaraOn === undefined) state.suaraOn = true;
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -821,7 +823,7 @@ function toggleMission(id) {
   render();
 
   // Animasi: efek "pop" di kartu yang barusan dicentang.
-  if (!sudahSelesai) animatePop(id);
+  if (!sudahSelesai) { animatePop(id); efekMisiKelar(); } // Tahap 20: bunyi + getar
   // Animasi: overlay "LEVEL UP!" kalau tadi naik level.
   if (naikLevel) animateLevelUp();
 }
@@ -905,6 +907,67 @@ function toastInfo(teks) {
 
 
 // ---------------------------------------------------------------------
+//  7g) SUARA & GETAR (Tahap 20)
+//  Nada dibikin dari kode (Web Audio API) — gak butuh file .mp3, jadi app
+//  tetap ringan. AudioContext dibuat sekali, pas dipanggil pertama kali.
+//  Kalau browser gak dukung atau toggle mati, fungsi diam aja (gak error).
+// ---------------------------------------------------------------------
+let _audioCtx = null;
+function audioCtx() {
+  if (_audioCtx) return _audioCtx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  _audioCtx = new AC();
+  return _audioCtx;
+}
+
+// Bunyikan 1 nada singkat. freq = tinggi nada (Hz), durasi dalam detik.
+function bunyiNada(freq, durasi, tipe) {
+  if (!state.suaraOn) return;
+  const ctx = audioCtx();
+  if (!ctx) return;
+  // Browser kadang "suspend" audio sampai ada interaksi; resume dulu.
+  if (ctx.state === "suspended") ctx.resume();
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = tipe || "sine";
+  osc.frequency.value = freq;
+
+  // Amplop volume: naik cepat lalu meredup, biar gak "klik" kasar.
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + durasi);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + durasi);
+}
+
+// Getar HP (kalau didukung & toggle nyala). pola = angka/array milidetik.
+function getar(pola) {
+  if (!state.suaraOn) return;
+  if (navigator.vibrate) navigator.vibrate(pola);
+}
+
+// Efek pas misi dicentang: "ting" pendek + getar singkat.
+function efekMisiKelar() {
+  bunyiNada(660, 0.12, "triangle");
+  getar(30);
+}
+
+// Efek pas naik level: 3 nada naik (arpeggio) + getar pola.
+function efekLevelUp() {
+  bunyiNada(523, 0.14, "sine");          // C5
+  setTimeout(() => bunyiNada(659, 0.14, "sine"), 110); // E5
+  setTimeout(() => bunyiNada(784, 0.22, "sine"), 220); // G5
+  getar([40, 50, 40]);
+}
+
+
+// ---------------------------------------------------------------------
 //  7b) animatePop(id) & animateLevelUp()
 //  Kasih kelas CSS sebentar lalu dicabut, biar animasinya jalan sekali.
 // ---------------------------------------------------------------------
@@ -920,6 +983,8 @@ function animateLevelUp() {
   const overlay = document.getElementById("levelup");
   const sub = document.getElementById("levelup-sub");
   const burst = document.getElementById("burst");
+
+  efekLevelUp(); // Tahap 20: bunyi arpeggio naik + getar pas level up
 
   // Tampilkan level baru di bawah teks.
   sub.textContent = "Lv. " + state.level;
@@ -1475,7 +1540,24 @@ setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
 setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
 setupBackup();       // sambungkan tombol export/import data
 setupProfil();       // sambungkan strip profil + modal edit
+setupSuara();        // sambungkan toggle suara & getar
 render();
+
+
+// ---------------------------------------------------------------------
+//  setupSuara() (Tahap 20) — toggle bunyi/getar + bunyi tes pas dinyalain.
+// ---------------------------------------------------------------------
+function setupSuara() {
+  const t = document.getElementById("suara-toggle");
+  if (!t) return;
+  t.checked = state.suaraOn;
+  t.addEventListener("change", () => {
+    state.suaraOn = t.checked;
+    save();
+    if (state.suaraOn) efekMisiKelar(); // kasih contoh bunyi pas dinyalain
+    toastInfo(state.suaraOn ? "🔊 Suara & getar: ON" : "🔇 Suara & getar: OFF");
+  });
+}
 
 
 // ---------------------------------------------------------------------
