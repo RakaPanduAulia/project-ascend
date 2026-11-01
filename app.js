@@ -961,6 +961,9 @@ function render() {
   // Profil (Tahap 17): avatar + nama + gelar sesuai level.
   renderProfil();
 
+  // Ringkasan hari (Tahap 19): dashboard sekilas di tab Info.
+  renderRingkas();
+
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
     state._freezeDipakai = false;
@@ -1486,6 +1489,66 @@ function renderProfil() {
   av.textContent = state.profil.avatar;
   nm.textContent = state.profil.nama;
   gl.textContent = "Lv." + state.level + " · " + gelarSekarang();
+}
+
+
+// ---------------------------------------------------------------------
+//  renderRingkas() (Tahap 19) — tab Info: kartu ringkasan kondisi hari ini
+//  + fokus (misi terdekat yang belum kelar). Semua angka dibaca dari state,
+//  jadi selalu sinkron sama halaman lain (gak nyimpen angka ganda).
+// ---------------------------------------------------------------------
+function renderRingkas() {
+  const grid = document.getElementById("ringkas-grid");
+  if (!grid) return;
+
+  const totalMisi = misiAktif().length;
+  const kelar = state.done.length;
+
+  // Persen gizi = rata-rata 3 target (kalori, protein, air), dibatasi 100.
+  let persenGizi = 0;
+  GIZI_INFO.forEach(g => {
+    const target = state.giziTarget[g.key] || 1;
+    persenGizi += Math.min(100, (state.gizi[g.key] / target) * 100);
+  });
+  persenGizi = Math.round(persenGizi / GIZI_INFO.length);
+
+  const kartu = [
+    { icon: "🗺️", label: "Misi kelar", nilai: kelar + " / " + totalMisi },
+    { icon: "🍎", label: "Gizi", nilai: persenGizi + "%" },
+    { icon: "💎", label: "Poin", nilai: state.poin },
+    { icon: "🔥", label: "Streak", nilai: state.streak + " hari" },
+    { icon: "⭐", label: "Level", nilai: "Lv. " + state.level },
+    { icon: "⚔️", label: "Skill", nilai: state.skills.length + " / " + SKILLS.length },
+  ];
+
+  grid.innerHTML = "";
+  kartu.forEach(k => {
+    const el = document.createElement("div");
+    el.className = "ringkas-kartu";
+    el.innerHTML = `
+      <div class="ringkas-icon">${k.icon}</div>
+      <div class="ringkas-nilai">${k.nilai}</div>
+      <div class="ringkas-label">${k.label}</div>
+    `;
+    grid.appendChild(el);
+  });
+
+  // Fokus: misi pertama yang belum kelar (dorongan buat lanjut).
+  const fokus = document.getElementById("ringkas-fokus");
+  if (!fokus) return;
+  const belum = misiAktif().filter(m => !state.done.includes(m.id));
+  if (belum.length === 0) {
+    fokus.innerHTML = `<div class="ringkas-done">🎉 Semua misi hari ini kelar. Mantap!</div>`;
+  } else {
+    const m = belum[0];
+    fokus.innerHTML = `
+      <div class="ringkas-fokus-kartu">
+        <div class="ringkas-fokus-cat">${m.cat}</div>
+        <div class="ringkas-fokus-nama">${escapeHtml(m.name)}</div>
+        <div class="ringkas-fokus-sisa">Masih ada ${belum.length} misi belum kelar</div>
+      </div>
+    `;
+  }
 }
 
 
