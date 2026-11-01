@@ -296,6 +296,72 @@ function save() {
   localStorage.setItem("ascend", JSON.stringify(state));
 }
 
+
+// ---------------------------------------------------------------------
+//  5a) BACKUP & RESTORE (Tahap 18)
+//  exportData() : ubah semua data (state) jadi file .json, lalu download.
+//  importData() : baca file .json yang dipilih user, pasang balik, reload.
+//  Kenapa reload? Biar load() jalan lagi dari awal -> semua backfill &
+//  render fresh, gak ada sisa data lama nyangkut di memori.
+// ---------------------------------------------------------------------
+function exportData() {
+  // Bungkus dengan sedikit info biar file-nya jelas & bisa dicek pas import.
+  const bungkus = {
+    app: "ascend",
+    versi: 1,
+    tanggal: new Date().toISOString(),
+    data: state,
+  };
+  const teks = JSON.stringify(bungkus, null, 2);
+  const blob = new Blob([teks], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  // Nama file: ascend-backup-2026-11-01.json
+  const nama = "ascend-backup-" + today() + ".json";
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nama;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toastInfo("📥 Data di-backup ke " + nama);
+}
+
+// Dipanggil pas user milih file. 'file' = objek File dari <input type=file>.
+function importData(file) {
+  if (!file) return;
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const isi = JSON.parse(reader.result);
+
+      // Cek file ini backup Ascend yang bener (jangan asal file .json).
+      const data = (isi && isi.app === "ascend" && isi.data) ? isi.data : isi;
+      if (!data || typeof data !== "object" || data.level === undefined) {
+        toastInfo("⚠️ File ini bukan backup Ascend yang valid.");
+        return;
+      }
+
+      if (!confirm("Ganti semua data sekarang dengan isi file backup? Data saat ini akan tertimpa.")) {
+        return;
+      }
+
+      // Tulis ke localStorage, lalu reload biar load() yang pasang & backfill.
+      localStorage.setItem("ascend", JSON.stringify(data));
+      toastInfo("📤 Data dipulihkan! Memuat ulang…");
+      setTimeout(() => location.reload(), 600);
+    } catch (e) {
+      toastInfo("⚠️ File rusak atau bukan format JSON.");
+    }
+  };
+
+  reader.onerror = () => toastInfo("⚠️ Gagal baca file.");
+  reader.readAsText(file);
+}
+
 function load() {
   const saved = localStorage.getItem("ascend");
   if (saved) {
@@ -1373,7 +1439,29 @@ setupNav();          // aktifkan navigasi tab bawah
 setupJurnal();       // sambungkan textarea jurnal
 setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
 setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
+setupBackup();       // sambungkan tombol export/import data
 render();
+
+
+// ---------------------------------------------------------------------
+//  setupBackup() — sambungkan tombol Export & input Import di tab Lainnya.
+// ---------------------------------------------------------------------
+function setupBackup() {
+  const btnExport = document.getElementById("backup-export-btn");
+  const inpImport = document.getElementById("backup-import-input");
+  const btnImport = document.getElementById("backup-import-btn");
+
+  if (btnExport) btnExport.addEventListener("click", exportData);
+
+  // Tombol "Import" cuma mancing klik ke input file yang disembunyiin.
+  if (btnImport && inpImport) {
+    btnImport.addEventListener("click", () => inpImport.click());
+    inpImport.addEventListener("change", e => {
+      importData(e.target.files[0]);
+      e.target.value = ""; // reset biar file sama bisa dipilih lagi nanti
+    });
+  }
+}
 
 
 // ---------------------------------------------------------------------
