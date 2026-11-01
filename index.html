@@ -20,6 +20,17 @@
             <div class="streak-chip" id="streak-label">🔥 0</div>
           </div>
         </div>
+
+        <!-- Profil (Tahap 17): avatar + nama + gelar. Klik buat edit. -->
+        <button class="profil-strip" id="profil-strip" title="Ketuk untuk edit profil">
+          <span class="profil-avatar" id="profil-avatar">🧑</span>
+          <span class="profil-teks">
+            <span class="profil-nama" id="profil-nama">Hunter</span>
+            <span class="profil-gelar" id="profil-gelar">Pemula</span>
+          </span>
+          <span class="profil-edit">✏️</span>
+        </button>
+
         <div class="day-counter">
           <span id="day-label">DAY 1</span>
           <span id="day-total">/ 66</span>
@@ -170,6 +181,21 @@
     <button class="nav-btn" data-page="shop"><span class="nav-ico">🛒</span><span>Shop</span></button>
     <button class="nav-btn" data-page="more"><span class="nav-ico">🏆</span><span>Lainnya</span></button>
   </nav>
+
+  <!-- Modal edit profil (Tahap 17) -->
+  <div class="modal-overlay" id="profil-modal">
+    <div class="modal-card">
+      <div class="modal-title">👤 Edit Profil</div>
+      <label class="modal-label">Nama</label>
+      <input type="text" id="profil-nama-input" class="modal-input" maxlength="20" placeholder="Nama kamu" />
+      <label class="modal-label">Avatar</label>
+      <div class="avatar-picker" id="avatar-picker"></div>
+      <div class="modal-btns">
+        <button class="modal-btn batal" id="profil-batal">Batal</button>
+        <button class="modal-btn simpan" id="profil-simpan">Simpan</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Notifikasi kecil pas badge kebuka -->
   <div class="toast" id="toast"></div>

@@ -193,7 +193,32 @@ let state = {
   reminderOn: false,  // reminder harian nyala/mati
   reminderJam: "20:00", // jam reminder "HH:MM"
   reminderTanggal: "",  // tanggal terakhir reminder sudah bunyi (anti-dobel)
+  profil: { nama: "Hunter", avatar: "🧑" }, // Tahap 17: nama + avatar emoji
 };
+
+
+// Daftar avatar emoji yang bisa dipilih user (Tahap 17).
+const AVATARS = ["🧑", "👨", "👩", "🧔", "👤", "🦸", "🥷", "🧙", "🐺", "🦁", "🔥", "⚡"];
+
+// Gelar sesuai level (Tahap 17): makin tinggi level, makin keren gelarnya.
+// Dipilih gelar dengan 'min' tertinggi yang <= level sekarang.
+const GELAR = [
+  { min: 1,  nama: "Pemula" },
+  { min: 3,  nama: "Penempa Diri" },
+  { min: 5,  nama: "Pendaki" },
+  { min: 8,  nama: "Petarung" },
+  { min: 12, nama: "Ksatria" },
+  { min: 16, nama: "Elite" },
+  { min: 20, nama: "Monarch" },
+];
+
+function gelarSekarang() {
+  let hasil = GELAR[0].nama;
+  for (const g of GELAR) {
+    if (state.level >= g.min) hasil = g.nama;
+  }
+  return hasil;
+}
 
 
 // Langkah tambah/kurang tiap tombol gizi (biar input cepat).
@@ -396,6 +421,9 @@ function load() {
   if (state.reminderOn === undefined)   state.reminderOn = false;
   if (!state.reminderJam)               state.reminderJam = "20:00";
   if (state.reminderTanggal === undefined) state.reminderTanggal = "";
+  if (!state.profil)        state.profil = { nama: "Hunter", avatar: "🧑" };
+  if (!state.profil.nama)   state.profil.nama = "Hunter";
+  if (!state.profil.avatar) state.profil.avatar = "🧑";
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -930,6 +958,9 @@ function render() {
   // Poin (mata uang) di header.
   document.getElementById("poin-label").textContent = "💎 " + state.poin;
 
+  // Profil (Tahap 17): avatar + nama + gelar sesuai level.
+  renderProfil();
+
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
     state._freezeDipakai = false;
@@ -1440,7 +1471,75 @@ setupJurnal();       // sambungkan textarea jurnal
 setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
 setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
 setupBackup();       // sambungkan tombol export/import data
+setupProfil();       // sambungkan strip profil + modal edit
 render();
+
+
+// ---------------------------------------------------------------------
+//  renderProfil() (Tahap 17) — gambar avatar + nama + gelar di header.
+// ---------------------------------------------------------------------
+function renderProfil() {
+  const av = document.getElementById("profil-avatar");
+  const nm = document.getElementById("profil-nama");
+  const gl = document.getElementById("profil-gelar");
+  if (!av || !nm || !gl) return;
+  av.textContent = state.profil.avatar;
+  nm.textContent = state.profil.nama;
+  gl.textContent = "Lv." + state.level + " · " + gelarSekarang();
+}
+
+
+// ---------------------------------------------------------------------
+//  setupProfil() (Tahap 17) — buka modal, isi avatar picker, simpan.
+// ---------------------------------------------------------------------
+function setupProfil() {
+  const strip   = document.getElementById("profil-strip");
+  const modal   = document.getElementById("profil-modal");
+  const inpNama = document.getElementById("profil-nama-input");
+  const picker  = document.getElementById("avatar-picker");
+  const btnBatal  = document.getElementById("profil-batal");
+  const btnSimpan = document.getElementById("profil-simpan");
+  if (!strip || !modal) return;
+
+  let pilihAvatar = state.profil.avatar; // avatar yang lagi dipilih di modal
+
+  function gambarPicker() {
+    picker.innerHTML = "";
+    AVATARS.forEach(a => {
+      const b = document.createElement("button");
+      b.className = "avatar-opt" + (a === pilihAvatar ? " aktif" : "");
+      b.textContent = a;
+      b.addEventListener("click", () => {
+        pilihAvatar = a;
+        gambarPicker(); // gambar ulang biar tanda 'aktif' pindah
+      });
+      picker.appendChild(b);
+    });
+  }
+
+  function buka() {
+    pilihAvatar = state.profil.avatar;
+    inpNama.value = state.profil.nama;
+    gambarPicker();
+    modal.classList.add("show");
+  }
+  function tutup() { modal.classList.remove("show"); }
+
+  strip.addEventListener("click", buka);
+  btnBatal.addEventListener("click", tutup);
+  // Klik area gelap di luar kartu = tutup (batal).
+  modal.addEventListener("click", e => { if (e.target === modal) tutup(); });
+
+  btnSimpan.addEventListener("click", () => {
+    const nama = inpNama.value.trim();
+    state.profil.nama = nama || "Hunter"; // kosong -> balik default
+    state.profil.avatar = pilihAvatar;
+    save();
+    render();
+    tutup();
+    toastInfo("👤 Profil disimpan!");
+  });
+}
 
 
 // ---------------------------------------------------------------------

@@ -1253,3 +1253,121 @@ body.theme-gold .misi-add-btn:hover { background: #cf9c1a; }
 
 body.theme-gold .backup-btn.export { background: #b8860b; }
 body.theme-gold .backup-btn.export:hover { background: #cf9c1a; }
+
+
+/* ===================================================================== */
+/*  TAHAP 17 — Profil & avatar                                           */
+/* ===================================================================== */
+.profil-strip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 51, 0.55);
+  border: 1px solid #1a3a8a;
+  border-radius: 13px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: #e8eaf4;
+}
+.profil-strip:hover { background: rgba(21, 32, 74, 0.7); }
+.profil-avatar {
+  font-size: 30px;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b1a4d;
+  border: 1px solid #1f47e8;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.profil-teks { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.profil-nama { font-size: 15px; font-weight: 800; }
+.profil-gelar { font-size: 12px; color: #7fd0ff; font-weight: 600; }
+.profil-edit { font-size: 14px; opacity: 0.6; flex-shrink: 0; }
+
+body.theme-gold .profil-avatar { border-color: #b8860b; }
+body.theme-gold .profil-gelar { color: #e8c35a; }
+
+/* Modal edit profil */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 16, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+.modal-overlay.show { display: flex; }
+.modal-card {
+  background: #121a33;
+  border: 1px solid #1f47e8;
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+.modal-label {
+  display: block;
+  font-size: 12px;
+  color: #8a97c2;
+  font-weight: 600;
+  margin: 10px 0 6px;
+}
+.modal-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #e8eaf4;
+  font-size: 15px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: inherit;
+}
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 7px;
+}
+.avatar-opt {
+  font-size: 22px;
+  aspect-ratio: 1;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.avatar-opt.aktif {
+  border-color: #1f47e8;
+  background: #15204a;
+  box-shadow: 0 0 10px rgba(31, 71, 232, 0.5);
+}
+.modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+.modal-btn {
+  flex: 1;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 11px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.modal-btn.batal { background: #16233f; color: #cdd6f4; border: 1px solid #1a3a8a; }
+.modal-btn.simpan { background: #1f47e8; color: #fff; }
+.modal-btn.simpan:hover { background: #2a52f0; }
+body.theme-gold .modal-btn.simpan { background: #b8860b; }
