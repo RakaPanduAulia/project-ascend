@@ -1226,3 +1226,30 @@ body.theme-gold .switch input:checked + .slider {
 /* Tema emas: ikut warnain aksen editor */
 body.theme-gold .misi-add-btn { background: #b8860b; }
 body.theme-gold .misi-add-btn:hover { background: #cf9c1a; }
+
+
+/* ===================================================================== */
+/*  TAHAP 18 — Backup & Restore data                                     */
+/* ===================================================================== */
+.backup-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.backup-btn {
+  width: 100%;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 0;
+  border-radius: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.backup-btn.export { background: #1f47e8; color: #fff; }
+.backup-btn.export:hover { background: #2a52f0; }
+.backup-btn.import {
+  background: #16233f;
+  color: #cdd6f4;
+  border: 1px solid #1a3a8a;
+}
+.backup-btn.import:hover { background: #1b2d52; }
+
+body.theme-gold .backup-btn.export { background: #b8860b; }
+body.theme-gold .backup-btn.export:hover { background: #cf9c1a; }
