@@ -1732,3 +1732,12 @@ body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
 .app { overflow-x: hidden; }
 .section { overflow: hidden; }
 .goal-item, .ringkas-kartu, .mission, .misi-edit-row { max-width: 100%; }
+
+
+/* ===================================================================== */
+/*  TAHAP 38 — konsistensi spasi & font (ganti inline style tersebar)     */
+/* ===================================================================== */
+/* Judul halaman kedua dst (bukan yang pertama) dikasih jarak atas seragam. */
+.page-title.sub { margin-top: 22px; }
+/* Judul pertama di dalam .section nempel ke atas kartu (gak ada jarak dobel). */
+.section > .day-title:first-child { margin-top: 0; }
