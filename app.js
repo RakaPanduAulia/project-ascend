@@ -1190,6 +1190,7 @@ function render() {
   renderGoals();      // Tahap 29: target jangka panjang (tab Info)
   renderMoodHistory();// Tahap 42: riwayat mood 7 hari (tab Info)
   renderArsip();      // Tahap 47: daftar babak lama (tab Lainnya)
+  renderKalender();   // Tahap 49: kalender kontribusi (tab Info)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -2004,6 +2005,34 @@ function renderProfilSlot() {
     }
     box.appendChild(row);
   });
+}
+
+// Tahap 49: KALENDER KONTRIBUSI — grid kotak 7x~, makin banyak misi makin
+// terang (kayak GitHub). Dari state.history (+ hari ini). Tampil di tab Info.
+function renderKalender() {
+  const box = document.getElementById("kalender-grid");
+  if (!box) return;
+  // Peta tanggal -> misi kelar.
+  const peta = {};
+  state.history.forEach(h => { peta[h.date] = h.kelar || 0; });
+  peta[today()] = state.done.length;
+
+  box.innerHTML = "";
+  const JUM_HARI = 91; // ~3 bulan terakhir biar muat di layar HP
+  for (let i = JUM_HARI - 1; i >= 0; i--) {
+    const tgl = tanggalMundur(i);
+    const kelar = peta[tgl] || 0;
+    // Tingkat warna 0-4 berdasar jumlah misi.
+    let lv = 0;
+    if (kelar >= 1) lv = 1;
+    if (kelar >= 3) lv = 2;
+    if (kelar >= 6) lv = 3;
+    if (kelar >= 10) lv = 4;
+    const sel = document.createElement("div");
+    sel.className = "kal-sel kal-lv" + lv;
+    sel.title = tgl + ": " + kelar + " misi";
+    box.appendChild(sel);
+  }
 }
 
 function setupProfilSlot() {
