@@ -1764,7 +1764,13 @@ function tambahGoal(nama, target) {
 function ubahGoal(id, delta) {
   const g = state.goals.find(x => x.id === id);
   if (!g) return;
+  const sebelum = g.nilai;
   g.nilai = Math.max(0, Math.min(g.target, g.nilai + delta));
+  // Tahap 45: rayakan pas goal BARU tercapai (nyentuh target dari bawah).
+  if (sebelum < g.target && g.nilai >= g.target) {
+    if (typeof efekLevelUp === "function") efekLevelUp(); // bunyi + getar
+    toastInfo("🎯 Target \"" + g.nama + "\" tercapai! Mantap! 🎉");
+  }
   save(); render();
 }
 function hapusGoal(id) {
