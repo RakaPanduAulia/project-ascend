@@ -1912,6 +1912,74 @@ function shareKartu() {
 function setupShare() {
   const btn = document.getElementById("share-btn");
   if (btn) btn.addEventListener("click", shareKartu);
+  const btnW = document.getElementById("weekly-export-btn");
+  if (btnW) btnW.addEventListener("click", exportMingguan);
+}
+
+// Tahap 44: EKSPOR RINGKASAN MINGGUAN ke gambar PNG (canvas, tanpa library).
+// Ringkas 7 hari terakhir: misi/hari + mood + total. Download sebagai PNG.
+function exportMingguan() {
+  const W = 700, H = 460;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (!ctx) { toastInfo("Browser gak dukung canvas."); return; }
+
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#17204a"); g.addColorStop(1, "#0b0e18");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#4d6bff";
+  ctx.font = "800 34px 'Segoe UI', sans-serif";
+  ctx.fillText("Ringkasan Mingguan", 40, 58);
+  ctx.fillStyle = "#8a97c2";
+  ctx.font = "500 18px 'Segoe UI', sans-serif";
+  ctx.fillText(state.profil.nama + " · Day " + dayNumber() + " / 66", 40, 86);
+
+  // 7 kolom hari: tinggi bar = misi kelar hari itu, emoji mood di bawah.
+  const histMap = {};
+  state.history.forEach(h => { histMap[h.date] = h.kelar || 0; });
+  const maxBar = Math.max(1, ...Object.values(histMap), state.done.length);
+  const x0 = 40, lebar = (W - 80) / 7, baseY = 340, maxH = 180;
+  for (let i = 6; i >= 0; i--) {
+    const idx = 6 - i;
+    const tgl = tanggalMundur(i);
+    const kelar = (i === 0) ? state.done.length : (histMap[tgl] || 0);
+    const tinggi = (kelar / maxBar) * maxH;
+    const x = x0 + idx * lebar;
+    // Bar.
+    ctx.fillStyle = "#1f47e8";
+    ctx.fillRect(x + lebar * 0.2, baseY - tinggi, lebar * 0.6, tinggi);
+    // Angka misi.
+    ctx.fillStyle = "#e8eaf4";
+    ctx.font = "700 16px 'Segoe UI', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(kelar), x + lebar / 2, baseY - tinggi - 8);
+    // Mood emoji.
+    const mood = state.mood[tgl] || "·";
+    ctx.font = "22px sans-serif";
+    ctx.fillText(mood, x + lebar / 2, baseY + 30);
+    // Label hari.
+    ctx.fillStyle = "#8a97c2";
+    ctx.font = "500 13px 'Segoe UI', sans-serif";
+    ctx.fillText(HARI_SINGKAT[new Date(tgl).getDay()], x + lebar / 2, baseY + 54);
+  }
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#7fd0ff";
+  ctx.font = "600 16px 'Segoe UI', sans-serif";
+  ctx.fillText("🔥 Streak " + state.streak + "   ·   💎 " + state.poin + "   ·   Lv." + state.level, 40, 420);
+
+  c.toBlob(blob => {
+    if (!blob) { toastInfo("Gagal bikin gambar."); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "ascend-minggu-" + today() + ".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toastInfo("📊 Ringkasan mingguan kedownload!");
+  }, "image/png");
 }
 
 
