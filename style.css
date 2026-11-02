@@ -1539,3 +1539,120 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 @media (prefers-reduced-motion: reduce) {
   .mood-opt { transition: none; }
 }
+
+
+/* ===================================================================== */
+/*  BLOK B (Tahap 27-31) — kategori, jadwal, goals, catatan, mode terang  */
+/* ===================================================================== */
+
+/* --- Tahap 28: Jadwal hari di form misi --- */
+.misi-jadwal-wrap { margin-top: 10px; }
+.misi-jadwal-label { font-size: 11px; color: #8a97c2; display: block; margin-bottom: 6px; }
+.misi-hari { display: flex; gap: 5px; flex-wrap: wrap; }
+.hari-opt {
+  flex: 1;
+  min-width: 38px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #cdd6f4;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hari-opt.aktif { background: var(--accent); color: #fff; border-color: var(--accent); }
+.misi-jadwal-tag, .misi-note-tag {
+  font-size: 10px;
+  color: var(--accent-2);
+  font-weight: 600;
+  margin-left: 6px;
+}
+.misi-note-tag { display: block; margin: 3px 0 0; opacity: 0.85; }
+
+/* --- Tahap 27: Kategori chips --- */
+.kategori-kelola { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(26,58,138,0.4); }
+.kategori-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.kat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #cdd6f4;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+.kat-del {
+  background: transparent; border: none; color: #ff6b8a;
+  font-size: 11px; cursor: pointer; padding: 0; line-height: 1;
+}
+
+/* --- Tahap 30: tombol catatan di editor misi --- */
+.misi-note-btn {
+  background: transparent;
+  border: 1px solid #2a3f6e;
+  color: #cdd6f4;
+  font-size: 12px;
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.misi-note-btn:hover { background: #16233f; }
+
+/* --- Tahap 29: Goals --- */
+.goals-empty { font-size: 13px; color: #8a97c2; text-align: center; padding: 10px 0; }
+.goal-item {
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.goal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.goal-nama { font-size: 14px; font-weight: 700; }
+.goal-del { background: transparent; border: none; color: #ff6b8a; font-size: 13px; cursor: pointer; }
+.goal-track { height: 9px; background: #0b1a4d; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.goal-fill { height: 100%; background: var(--accent); }
+.goal-foot { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.goal-min, .goal-plus {
+  background: #16233f; border: 1px solid #1a3a8a; color: #cdd6f4;
+  font-size: 16px; font-weight: 700; width: 34px; height: 30px;
+  border-radius: 9px; cursor: pointer;
+}
+.goal-num { font-size: 13px; color: #8a97c2; min-width: 70px; text-align: center; }
+
+/* --- Tahap 31: Mode terang (flip variabel tema) --- */
+body.mode-terang {
+  --bg:     #f4f6fc;
+  --card:   #ffffff;
+  --card-2: #eaf0ff;
+  --border: #c9d6f5;
+  --text:   #141a2e;
+  --muted:  #5a678f;
+}
+body.mode-terang {
+  background: radial-gradient(1200px 500px at 50% -10%, rgba(31,71,232,0.08), transparent 70%), var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+}
+/* Surface utama yang hardcoded gelap -> ikut terang pas mode terang. */
+body.mode-terang .section,
+body.mode-terang .ringkas-kartu,
+body.mode-terang .goal-item,
+body.mode-terang .mission,
+body.mode-terang .misi-edit-row,
+body.mode-terang .kat-chip,
+body.mode-terang .modal-input,
+body.mode-terang .misi-input,
+body.mode-terang .misi-select,
+body.mode-terang .misi-exp-input {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
+body.mode-terang .kutipan { color: var(--accent); }

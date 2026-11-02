@@ -46,7 +46,13 @@ const MISI_DEFAULT = [
 
 
 // Urutan kategori buat ditampilkan (misi dikelompokkan per kategori).
-const CATEGORIES = ["Fisik", "Perawatan", "Mental", "Build"];
+const CATEGORIES = ["Fisik", "Perawatan", "Mental", "Build"]; // default; aktif dibaca dari state.kategori
+
+// Tahap 27: kategori yang BENERAN dipakai (bisa ditambah user). Fallback ke default.
+function kategoriAktif() {
+  if (!state.kategori || state.kategori.length === 0) return CATEGORIES;
+  return state.kategori;
+}
 
 
 // ---------------------------------------------------------------------
@@ -59,6 +65,14 @@ const CATEGORIES = ["Fisik", "Perawatan", "Mental", "Build"];
 function misiAktif() {
   if (!state.missions || state.missions.length === 0) return MISI_DEFAULT;
   return state.missions;
+}
+
+// Tahap 28: misi yang muncul HARI INI. Misi tanpa jadwal (field 'hari' kosong)
+// muncul tiap hari. Misi terjadwal cuma muncul kalau hari ini cocok.
+// 'hari' pakai angka 0=Minggu ... 6=Sabtu (sama kayak Date.getDay()).
+function misiHariIni() {
+  const hariIni = new Date().getDay();
+  return misiAktif().filter(m => !m.hari || m.hari.length === 0 || m.hari.includes(hariIni));
 }
 
 
@@ -198,6 +212,10 @@ let state = {
   sudahOnboard: false, // Tahap 22: layar sambutan sudah dilewati?
   mood: {},       // Tahap 25: mood per tanggal, mis. { "2026-11-01": "😄" }
   tema: "blue",   // Tahap 24: tema warna pilihan (blue/ungu/hijau/merah) — terpisah dari item emas
+  kategori: ["Fisik", "Perawatan", "Mental", "Build"], // Tahap 27: kategori (bisa ditambah user)
+  goals: [],      // Tahap 29: target jangka panjang [{id,nama,target,nilai}]
+  mode: "gelap",  // Tahap 31: mode gelap / terang
+  misiNote: {},   // Tahap 30: catatan kecil per misi { misiId: "teks" }
 };
 
 
@@ -432,6 +450,10 @@ function load() {
   if (state.sudahOnboard === undefined) state.sudahOnboard = false;
   if (!state.mood) state.mood = {};
   if (!state.tema) state.tema = "blue";
+  if (!state.kategori || state.kategori.length === 0) state.kategori = ["Fisik", "Perawatan", "Mental", "Build"];
+  if (!state.goals) state.goals = [];
+  if (!state.mode) state.mode = "gelap";
+  if (!state.misiNote) state.misiNote = {};
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -708,12 +730,13 @@ function idMisiBaru() {
 function tambahMisi(nama, cat, exp) {
   nama = (nama || "").trim();
   if (!nama) { toastInfo("✏️ Nama misi gak boleh kosong."); return; }
-  if (!CATEGORIES.includes(cat)) cat = "Perawatan";
+  if (!kategoriAktif().includes(cat)) cat = kategoriAktif()[0] || "Perawatan";
   exp = parseInt(exp, 10);
   if (isNaN(exp) || exp < 1) exp = 8;
   if (exp > 50) exp = 50; // batas wajar biar gak bisa “ngecheat” EXP
 
   // Stat bonus default per kategori (biar misi custom tetap naikin stat).
+  // Kategori custom (buatan user) dapat bonus kecil campur biar tetap adil.
   const statDefault = {
     Fisik:      { body: 2 },
     Perawatan:  { looks: 1, body: 1 },
@@ -721,17 +744,48 @@ function tambahMisi(nama, cat, exp) {
     Build:      { mind: 2, discipline: 1 },
   };
 
+  // 'hari' (Tahap 28): array angka hari (0=Min..6=Sab). Kosong = tiap hari.
+  const hari = Array.isArray(arguments[3]) ? arguments[3] : [];
+
   state.missions.push({
     id: idMisiBaru(),
     name: nama,
     exp: exp,
-    stats: statDefault[cat] || { body: 1 },
+    stats: statDefault[cat] || { mind: 1, body: 1 },
     cat: cat,
+    hari: hari,
     custom: true, // penanda: ini misi bikinan user (boleh dihapus)
   });
   save();
   render();
-  toastInfo("✅ Misi ditambahkan!");
+  toastInfo(hari.length ? "✅ Misi terjadwal ditambahkan!" : "✅ Misi ditambahkan!");
+}
+
+// Tahap 27: tambah kategori baru.
+function tambahKategori(nama) {
+  nama = (nama || "").trim();
+  if (!nama) { toastInfo("✏️ Nama kategori gak boleh kosong."); return; }
+  if (state.kategori.includes(nama)) { toastInfo("Kategori itu sudah ada."); return; }
+  if (state.kategori.length >= 8) { toastInfo("Maksimal 8 kategori."); return; }
+  state.kategori.push(nama);
+  save();
+  render();
+  renderKategoriChips();
+  isiDropdownKategori();
+  toastInfo("🏷️ Kategori \"" + nama + "\" ditambahkan.");
+}
+
+// Hapus kategori (hanya kalau gak ada misi yang pakai, biar aman).
+function hapusKategori(nama) {
+  if (CATEGORIES.includes(nama)) { toastInfo("Kategori bawaan gak bisa dihapus."); return; }
+  const dipakai = misiAktif().some(m => m.cat === nama);
+  if (dipakai) { toastInfo("Masih ada misi di kategori ini. Pindahkan/hapus dulu."); return; }
+  state.kategori = state.kategori.filter(k => k !== nama);
+  save();
+  render();
+  renderKategoriChips();
+  isiDropdownKategori();
+  toastInfo("🗑️ Kategori dihapus.");
 }
 
 // Hapus satu misi. Kalau lagi dicentang hari ini, batalin dulu efeknya
@@ -766,7 +820,7 @@ function renderMisiEditor() {
   if (!box) return;
   box.innerHTML = "";
 
-  CATEGORIES.forEach(cat => {
+  kategoriAktif().forEach(cat => {
     const daftar = misiAktif().filter(m => m.cat === cat);
     if (daftar.length === 0) return;
 
@@ -778,11 +832,14 @@ function renderMisiEditor() {
     daftar.forEach(m => {
       const row = document.createElement("div");
       row.className = "misi-edit-row";
+      const adaJadwal = m.hari && m.hari.length > 0;
       row.innerHTML = `
-        <div class="misi-edit-name">${escapeHtml(m.name)}</div>
+        <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}</div>
         <div class="misi-edit-exp">+${m.exp}</div>
+        <button class="misi-note-btn" title="Catatan">📝</button>
         <button class="misi-del" data-id="${m.id}" title="Hapus misi">✕</button>
       `;
+      row.querySelector(".misi-note-btn").addEventListener("click", () => editMisiNote(m.id));
       row.querySelector(".misi-del").addEventListener("click", () => {
         if (confirm(`Hapus misi "${m.name}"?`)) hapusMisi(m.id);
       });
@@ -1041,6 +1098,7 @@ function render() {
   renderStatistik();  // Tahap 23: statistik mendalam (tab Info)
   renderMood();       // Tahap 25: mood harian (Home)
   renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
+  renderGoals();      // Tahap 29: target jangka panjang (tab Info)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -1068,10 +1126,10 @@ function render() {
   const list = document.getElementById("mission-list");
   list.innerHTML = "";
 
-  // Gambar misi dikelompokkan per kategori (Fisik, Perawatan, Mental, Build).
-  // Tiap kategori dikasih judul kecil dulu, baru kartu-kartu misinya.
-  CATEGORIES.forEach(cat => {
-    const misiKategori = misiAktif().filter(m => m.cat === cat);
+  // Gambar misi dikelompokkan per kategori. Misi terjadwal (Tahap 28) yang
+  // bukan untuk hari ini disembunyikan via misiHariIni().
+  kategoriAktif().forEach(cat => {
+    const misiKategori = misiHariIni().filter(m => m.cat === cat);
     if (misiKategori.length === 0) return;
 
     const heading = document.createElement("div");
@@ -1084,9 +1142,11 @@ function render() {
       const card = document.createElement("div");
       card.className = "mission" + (selesai ? " done" : "");
       card.setAttribute("data-id", mission.id);
+      // Catatan per misi (Tahap 30): tampil di bawah nama kalau ada.
+      const catatan = (state.misiNote && state.misiNote[mission.id]) || "";
       card.innerHTML = `
         <div class="check">${selesai ? "✓" : ""}</div>
-        <div class="name">${mission.name}</div>
+        <div class="name">${mission.name}${catatan ? `<span class="misi-note-tag">📝 ${escapeHtml(catatan)}</span>` : ""}</div>
         <div class="exp">+${mission.exp}</div>
       `;
       card.addEventListener("click", () => toggleMission(mission.id));
@@ -1094,7 +1154,7 @@ function render() {
     });
   });
 
-  const total = misiAktif().length;
+  const total = misiHariIni().length;
   const kelar = state.done.length;
   const pep = document.getElementById("pep-talk");
   if (kelar === 0) {
@@ -1557,7 +1617,167 @@ setupSuara();        // sambungkan toggle suara & getar
 setupTema();         // Tahap 24: pilihan tema warna
 setupMood();         // Tahap 25: tombol mood harian
 setupOnboard();      // Tahap 22: layar sambutan (muncul sekali)
+setupKategori();     // Tahap 27: form tambah kategori
+setupJadwal();       // Tahap 28: tombol hari di form misi
+setupGoals();        // Tahap 29: form target jangka panjang
+setupMode();         // Tahap 31: toggle mode gelap/terang
+applyMode();         // pasang mode gelap/terang pas load
 render();
+
+
+// ---------------------------------------------------------------------
+//  BLOK B — Tahap 27-31
+// ---------------------------------------------------------------------
+
+// Tahap 27: KATEGORI — isi dropdown kategori di form misi + chips kelola.
+function isiDropdownKategori() {
+  const sel = document.getElementById("misi-cat");
+  if (!sel) return;
+  const terpilih = sel.value;
+  sel.innerHTML = "";
+  kategoriAktif().forEach(k => {
+    const o = document.createElement("option");
+    o.value = k; o.textContent = k;
+    sel.appendChild(o);
+  });
+  if (kategoriAktif().includes(terpilih)) sel.value = terpilih;
+}
+
+function renderKategoriChips() {
+  const box = document.getElementById("kategori-chips");
+  if (!box) return;
+  box.innerHTML = "";
+  kategoriAktif().forEach(k => {
+    const chip = document.createElement("span");
+    chip.className = "kat-chip";
+    const bawaan = CATEGORIES.includes(k);
+    chip.innerHTML = escapeHtml(k) + (bawaan ? "" : ` <button class="kat-del" title="Hapus kategori">✕</button>`);
+    if (!bawaan) {
+      chip.querySelector(".kat-del").addEventListener("click", () => hapusKategori(k));
+    }
+    box.appendChild(chip);
+  });
+}
+
+function setupKategori() {
+  isiDropdownKategori();
+  renderKategoriChips();
+  const btn = document.getElementById("kat-add-btn");
+  const inp = document.getElementById("kat-nama");
+  if (btn && inp) {
+    btn.addEventListener("click", () => { tambahKategori(inp.value); inp.value = ""; });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") btn.click(); });
+  }
+}
+
+// Tahap 28: JADWAL — tombol hari (Min-Sab) di form misi. Simpan di variabel
+// modul biar dibaca pas tombol "+ Tambah" ditekan.
+const HARI_LABEL = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+let _jadwalPilih = []; // angka hari yang dipilih di form
+
+function setupJadwal() {
+  const box = document.getElementById("misi-hari");
+  if (!box) return;
+  box.innerHTML = "";
+  HARI_LABEL.forEach((lbl, idx) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "hari-opt";
+    b.textContent = lbl;
+    b.addEventListener("click", () => {
+      if (_jadwalPilih.includes(idx)) _jadwalPilih = _jadwalPilih.filter(x => x !== idx);
+      else _jadwalPilih.push(idx);
+      b.classList.toggle("aktif");
+    });
+    box.appendChild(b);
+  });
+}
+
+// Tahap 30: CATATAN PER MISI — minta catatan lewat prompt sederhana.
+function editMisiNote(id) {
+  const lama = (state.misiNote && state.misiNote[id]) || "";
+  const baru = prompt("Catatan untuk misi ini (kosongkan untuk hapus):", lama);
+  if (baru === null) return; // batal
+  if (!state.misiNote) state.misiNote = {};
+  const teks = baru.trim();
+  if (teks) state.misiNote[id] = teks.slice(0, 60);
+  else delete state.misiNote[id];
+  save();
+  render();
+}
+
+// Tahap 29: GOALS — target jangka panjang.
+function tambahGoal(nama, target) {
+  nama = (nama || "").trim();
+  target = parseInt(target, 10);
+  if (!nama) { toastInfo("✏️ Nama target gak boleh kosong."); return; }
+  if (isNaN(target) || target < 1) target = 100;
+  state.goals.push({ id: "g" + Date.now().toString(36), nama, target, nilai: 0 });
+  save(); render(); toastInfo("🎯 Target ditambahkan.");
+}
+function ubahGoal(id, delta) {
+  const g = state.goals.find(x => x.id === id);
+  if (!g) return;
+  g.nilai = Math.max(0, Math.min(g.target, g.nilai + delta));
+  save(); render();
+}
+function hapusGoal(id) {
+  state.goals = state.goals.filter(g => g.id !== id);
+  save(); render();
+}
+function renderGoals() {
+  const box = document.getElementById("goals-list");
+  if (!box) return;
+  box.innerHTML = "";
+  if (state.goals.length === 0) {
+    box.innerHTML = `<div class="goals-empty">Belum ada target. Tambah satu di bawah 👇</div>`;
+    return;
+  }
+  state.goals.forEach(g => {
+    const persen = Math.min(100, Math.round((g.nilai / g.target) * 100));
+    const el = document.createElement("div");
+    el.className = "goal-item";
+    el.innerHTML = `
+      <div class="goal-head">
+        <span class="goal-nama">${escapeHtml(g.nama)}</span>
+        <button class="goal-del" title="Hapus target">✕</button>
+      </div>
+      <div class="goal-track"><div class="goal-fill" style="width:${persen}%;"></div></div>
+      <div class="goal-foot">
+        <button class="goal-min">−</button>
+        <span class="goal-num">${g.nilai} / ${g.target}</span>
+        <button class="goal-plus">+</button>
+      </div>
+    `;
+    el.querySelector(".goal-del").addEventListener("click", () => { if (confirm(`Hapus target "${g.nama}"?`)) hapusGoal(g.id); });
+    el.querySelector(".goal-min").addEventListener("click", () => ubahGoal(g.id, -1));
+    el.querySelector(".goal-plus").addEventListener("click", () => ubahGoal(g.id, +1));
+    box.appendChild(el);
+  });
+}
+function setupGoals() {
+  const btn = document.getElementById("goal-add-btn");
+  const inpN = document.getElementById("goal-nama");
+  const inpT = document.getElementById("goal-target");
+  if (btn && inpN && inpT) {
+    btn.addEventListener("click", () => { tambahGoal(inpN.value, inpT.value); inpN.value = ""; inpT.value = ""; });
+  }
+}
+
+// Tahap 31: MODE gelap/terang.
+function applyMode() {
+  document.body.classList.toggle("mode-terang", state.mode === "terang");
+}
+function setupMode() {
+  const t = document.getElementById("mode-toggle");
+  if (!t) return;
+  t.checked = state.mode === "terang";
+  t.addEventListener("change", () => {
+    state.mode = t.checked ? "terang" : "gelap";
+    save(); applyMode();
+    toastInfo(state.mode === "terang" ? "☀️ Mode terang" : "🌙 Mode gelap");
+  });
+}
 
 
 // ---------------------------------------------------------------------
@@ -1785,7 +2005,7 @@ function renderRingkas() {
   const grid = document.getElementById("ringkas-grid");
   if (!grid) return;
 
-  const totalMisi = misiAktif().length;
+  const totalMisi = misiHariIni().length;
   const kelar = state.done.length;
 
   // Persen gizi = rata-rata 3 target (kalori, protein, air), dibatasi 100.
@@ -1820,7 +2040,7 @@ function renderRingkas() {
   // Fokus: misi pertama yang belum kelar (dorongan buat lanjut).
   const fokus = document.getElementById("ringkas-fokus");
   if (!fokus) return;
-  const belum = misiAktif().filter(m => !state.done.includes(m.id));
+  const belum = misiHariIni().filter(m => !state.done.includes(m.id));
   if (belum.length === 0) {
     fokus.innerHTML = `<div class="ringkas-done">🎉 Semua misi hari ini kelar. Mantap!</div>`;
   } else {
@@ -1923,9 +2143,11 @@ function setupMisiForm() {
 
   if (btnTambah) {
     btnTambah.addEventListener("click", () => {
-      tambahMisi(inpNama.value, selCat.value, inpExp.value);
+      tambahMisi(inpNama.value, selCat.value, inpExp.value, _jadwalPilih.slice());
       inpNama.value = "";   // kosongin lagi biar siap nambah berikutnya
       inpExp.value = "";
+      _jadwalPilih = [];    // reset pilihan hari
+      document.querySelectorAll("#misi-hari .hari-opt.aktif").forEach(b => b.classList.remove("aktif"));
     });
   }
   // Enter di kolom nama = langsung tambah (biar cepet).
@@ -1980,7 +2202,7 @@ function cekReminder() {
   if (jamNow === state.reminderJam && state.reminderTanggal !== today()) {
     state.reminderTanggal = today(); // tandai sudah bunyi hari ini
     save();
-    const sisa = misiAktif().length - state.done.length;
+    const sisa = misiHariIni().length - state.done.length;
     if (sisa > 0) {
       bunyikanReminder(`Masih ada ${sisa} misi belum kelar hari ini. Ayo gas! 💪`);
     } else {
