@@ -216,6 +216,7 @@ let state = {
   goals: [],      // Tahap 29: target jangka panjang [{id,nama,target,nilai}]
   mode: "gelap",  // Tahap 31: mode gelap / terang
   misiNote: {},   // Tahap 30: catatan kecil per misi { misiId: "teks" }
+  misiReminderTanggal: {}, // Tahap 46: tanggal terakhir pengingat per-misi bunyi
 };
 
 
@@ -454,6 +455,7 @@ function load() {
   if (!state.goals) state.goals = [];
   if (!state.mode) state.mode = "gelap";
   if (!state.misiNote) state.misiNote = {};
+  if (!state.misiReminderTanggal) state.misiReminderTanggal = {};
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -848,12 +850,15 @@ function renderMisiEditor() {
       const row = document.createElement("div");
       row.className = "misi-edit-row";
       const adaJadwal = m.hari && m.hari.length > 0;
+      const tagJam = m.jam ? ` <span class="misi-jadwal-tag">⏰${m.jam}</span>` : "";
       row.innerHTML = `
-        <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}</div>
+        <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}${tagJam}</div>
         <div class="misi-edit-exp">+${m.exp}</div>
+        <button class="misi-jam-btn" title="Pengingat jam" aria-label="Atur jam pengingat ${escapeHtml(m.name)}">⏰</button>
         <button class="misi-note-btn" title="Catatan" aria-label="Catatan untuk ${escapeHtml(m.name)}">📝</button>
         <button class="misi-del" data-id="${m.id}" title="Hapus misi" aria-label="Hapus misi ${escapeHtml(m.name)}">✕</button>
       `;
+      row.querySelector(".misi-jam-btn").addEventListener("click", () => editMisiJam(m.id));
       row.querySelector(".misi-note-btn").addEventListener("click", () => editMisiNote(m.id));
       row.querySelector(".misi-del").addEventListener("click", () => {
         if (confirm(`Hapus misi "${m.name}"?`)) hapusMisi(m.id);
@@ -1748,6 +1753,21 @@ function editMisiNote(id) {
   const teks = baru.trim();
   if (teks) state.misiNote[id] = teks.slice(0, 60);
   else delete state.misiNote[id];
+}
+
+// Tahap 46: set jam pengingat per-misi ("HH:MM"), atau kosongkan buat hapus.
+function editMisiJam(id) {
+  const m = misiAktif().find(x => x.id === id);
+  if (!m) return;
+  const baru = prompt("Jam pengingat misi ini (format 24 jam, mis. 07:30). Kosongkan untuk hapus:", m.jam || "");
+  if (baru === null) return;
+  const teks = baru.trim();
+  if (teks === "") { delete m.jam; }
+  else if (/^\d{2}:\d{2}$/.test(teks)) { m.jam = teks; }
+  else { toastInfo("Format jam salah. Pakai HH:MM, mis. 07:30."); return; }
+  save();
+  render();
+  toastInfo(m.jam ? ("⏰ Pengingat misi di " + m.jam) : "Pengingat misi dihapus.");
   save();
   render();
 }
@@ -2436,7 +2456,7 @@ function cekReminder() {
   const jamNow = String(now.getHours()).padStart(2, "0") + ":" +
                  String(now.getMinutes()).padStart(2, "0");
 
-  if (jamNow === state.reminderJam && state.reminderTanggal !== today()) {
+  if (state.reminderOn && jamNow === state.reminderJam && state.reminderTanggal !== today()) {
     state.reminderTanggal = today(); // tandai sudah bunyi hari ini
     save();
     const sisa = misiHariIni().length - state.done.length;
@@ -2446,6 +2466,19 @@ function cekReminder() {
       bunyikanReminder("Semua misi kelar hari ini. Mantap! 🔥");
     }
   }
+
+  // Tahap 46: pengingat PER-MISI. Misi punya field 'jam' ("HH:MM").
+  // Bunyi sekali per misi per hari, cuma kalau misi belum kelar.
+  if (!state.misiReminderTanggal) state.misiReminderTanggal = {};
+  misiHariIni().forEach(m => {
+    if (!m.jam) return;
+    if (jamNow !== m.jam) return;
+    if (state.misiReminderTanggal[m.id] === today()) return; // sudah bunyi hari ini
+    if (state.done.includes(m.id)) return; // udah kelar, gak usah ingetin
+    state.misiReminderTanggal[m.id] = today();
+    save();
+    bunyikanReminder("Waktunya: " + m.name);
+  });
 }
 
 // Gambar setting reminder (toggle + input jam) di tab Lainnya.

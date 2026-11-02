@@ -1605,7 +1605,7 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 }
 
 /* --- Tahap 30: tombol catatan di editor misi --- */
-.misi-note-btn {
+.misi-note-btn, .misi-jam-btn {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-2);
@@ -1615,7 +1615,7 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
   cursor: pointer;
   flex-shrink: 0;
 }
-.misi-note-btn:hover { background: var(--surface-2); }
+.misi-note-btn:hover, .misi-jam-btn:hover { background: var(--surface-2); }
 
 /* --- Tahap 29: Goals --- */
 .goals-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 10px 0; }
