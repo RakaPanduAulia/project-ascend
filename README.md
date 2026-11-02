@@ -35,6 +35,20 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 25:** Mood harian — catat 1 dari 5 emoji per tanggal (`state.mood`), tampil di Home.
 - **Tahap 26:** Kutipan motivasi — 1 kutipan/hari, dipilih deterministik dari tanggal (tetap sepanjang hari).
 
+### Blok B (Tahap 27-31)
+- **Tahap 27:** Kategori kustom — user bisa tambah/hapus kategori (`state.kategori`, max 8). Kategori bawaan gak bisa dihapus; kategori berisi misi gak bisa dihapus. `kategoriAktif()`.
+- **Tahap 28:** Misi terjadwal — misi punya field `hari` (0=Min..6=Sab); kosong = tiap hari. `misiHariIni()` filter papan misi + ringkasan + reminder.
+- **Tahap 29:** Target jangka panjang — `state.goals` [{nama,target,nilai}], bar progres +/−, di tab Info.
+- **Tahap 30:** Catatan per misi — `state.misiNote[id]`, edit via tombol 📝 di editor, tampil di bawah nama misi.
+- **Tahap 31:** Mode gelap/terang — `state.mode`, flip variabel CSS `--bg/--card/--text/--border` + surface utama.
+
+### Blok C (Tahap 32-36)
+- **Tahap 32:** Animasi halus — transisi halaman (slide-up+fade) + kartu misi masuk; hormati reduced-motion.
+- **Tahap 33:** Empty state ramah — pesan + gaya dashed buat grafik/riwayat/goals kosong.
+- **Tahap 34:** Undo hapus misi — toast dengan tombol URUNGKAN (5 detik), kembalikan misi ke posisi semula.
+- **Tahap 35:** Share kartu progres — canvas 600×800 gambar Day/Level/streak/avatar, download PNG.
+- **Tahap 36:** Polish & audit — konsistensi penamaan, komentar per bagian, cek integrasi (no dup fn, 6 page=6 nav, semua ID terhubung).
+
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
 
