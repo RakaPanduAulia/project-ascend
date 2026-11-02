@@ -1736,3 +1736,20 @@ body.mode-terang .kutipan { color: var(--accent); }
 .app { overflow-x: hidden; }
 .section { overflow: hidden; }
 .goal-item, .ringkas-kartu, .mission, .misi-edit-row { max-width: 100%; }
+
+
+/* ===================================================================== */
+/*  FIX iOS — cegah zoom otomatis saat fokus input (Safari iPhone)        */
+/*  iOS Safari auto-zoom kalau font input < 16px. Paksa 16px di semua     */
+/*  field input/select/textarea. Ukuran visual lain gak berubah.         */
+/* ===================================================================== */
+input,
+select,
+textarea,
+.misi-input,
+.misi-select,
+.misi-exp-input,
+.modal-input,
+.reminder-time {
+  font-size: 16px;
+}
