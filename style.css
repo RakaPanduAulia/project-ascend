@@ -1165,9 +1165,16 @@ body.theme-gold .switch input:checked + .slider {
   border-radius: 10px;
   font-family: inherit;
 }
-.misi-form-row { display: flex; gap: 8px; }
+.misi-form-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .misi-select { flex: 1; }
 .misi-exp-input { width: 72px; }
+/* Fix responsif: elemen di dalam baris form boleh menyusut (min-width:0)
+   biar tombol gak kedorong keluar border di layar sempit. Input teks
+   mengisi sisa ruang; input angka tetap kecil; tombol gak menyusut. */
+.misi-form-row > .misi-input { flex: 1 1 120px; min-width: 0; }
+.misi-form-row > .misi-select { min-width: 0; }
+.misi-form-row > .misi-exp-input { flex: 0 0 72px; }
+.misi-form-row > .misi-add-btn { flex: 0 0 auto; }
 .misi-add-btn {
   background: #1f47e8;
   color: #fff;
@@ -1707,3 +1714,25 @@ body.mode-terang .kutipan { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .page.active, .mission { animation: none; }
 }
+
+
+/* ===================================================================== */
+/*  RESPONSIF — penyesuaian layar sempit (HP kecil)                       */
+/*  Hanya ubah jarak/penyusutan; gak menyentuh logika fitur apa pun.      */
+/* ===================================================================== */
+@media (max-width: 400px) {
+  body { padding: 14px 10px 60px; }
+  .section { padding: 13px; }
+  .misi-form-row { gap: 6px; }
+  .misi-add-btn { padding: 9px 12px; font-size: 13px; }
+  .goal-foot { gap: 10px; }
+  .goal-num { min-width: 56px; font-size: 12px; }
+  .goal-min, .goal-plus { width: 30px; height: 28px; }
+  .ringkas-grid { gap: 7px; }
+  .ringkas-nilai { font-size: 15px; }
+}
+
+/* Jaring pengaman umum: apa pun di dalam .app gak boleh meluber horizontal. */
+.app { overflow-x: hidden; }
+.section { overflow: hidden; }
+.goal-item, .ringkas-kartu, .mission, .misi-edit-row { max-width: 100%; }
