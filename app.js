@@ -217,6 +217,7 @@ let state = {
   mode: "gelap",  // Tahap 31: mode gelap / terang
   misiNote: {},   // Tahap 30: catatan kecil per misi { misiId: "teks" }
   misiReminderTanggal: {}, // Tahap 46: tanggal terakhir pengingat per-misi bunyi
+  arsip: [],      // Tahap 47: babak lama yang diarsipkan {tanggal, level, totalDone, hari}
 };
 
 
@@ -456,6 +457,7 @@ function load() {
   if (!state.mode) state.mode = "gelap";
   if (!state.misiNote) state.misiNote = {};
   if (!state.misiReminderTanggal) state.misiReminderTanggal = {};
+  if (!state.arsip) state.arsip = [];
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -1136,6 +1138,7 @@ function render() {
   renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
   renderGoals();      // Tahap 29: target jangka panjang (tab Info)
   renderMoodHistory();// Tahap 42: riwayat mood 7 hari (tab Info)
+  renderArsip();      // Tahap 47: daftar babak lama (tab Lainnya)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -1849,6 +1852,75 @@ function setupMode() {
     save(); applyMode();
     toastInfo(state.mode === "terang" ? "☀️ Mode terang" : "🌙 Mode gelap");
   });
+}
+
+
+// ---------------------------------------------------------------------
+//  BLOK F — Tahap 47-51
+// ---------------------------------------------------------------------
+
+// Tahap 47: MULAI BABAK BARU — arsipkan progres sekarang, lalu reset
+// level/exp/stat/misi-centang, TAPI arsip & daftar misi disimpan.
+function mulaiBabakBaru() {
+  const ok1 = confirm("Mulai babak baru? Progres sekarang (level, EXP, stat, streak) akan di-RESET.\n\nRiwayat disimpan ke arsip, dan daftar misi kamu tetap. Lanjut?");
+  if (!ok1) return;
+  const ok2 = confirm("Yakin? Ini gak bisa di-undo dari dalam app.\n\nSaran: Export backup dulu sebelum lanjut. Tetap mulai babak baru sekarang?");
+  if (!ok2) return;
+
+  // Arsipkan ringkasan babak ini.
+  state.arsip.push({
+    tanggal: today(),
+    level: state.level,
+    totalDone: state.totalDone || 0,
+    hari: dayNumber(),
+    expTotal: expTerkumpul(),
+  });
+
+  // Reset progres (TAPI simpan: arsip, missions, kategori, profil, tema, setting).
+  state.exp = 0;
+  state.level = 1;
+  state.done = [];
+  state.stats = { body: 50, mind: 50, looks: 50, discipline: 50 };
+  state.streak = 0;
+  state.history = [];
+  state.unlocked = [];
+  state.totalDone = 0;
+  state.startDate = today();
+  state.date = today();
+  state.skills = [];
+  state.weekly = { minggu: "", progress: {}, selesai: [] };
+  state.goals = [];
+  state.mood = {};
+  save();
+  render();
+  toastInfo("🌅 Babak baru dimulai! Semangat lagi dari Day 1.");
+}
+
+function renderArsip() {
+  const box = document.getElementById("arsip-list");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!state.arsip || state.arsip.length === 0) {
+    box.innerHTML = `<div class="history-empty">Belum ada babak lama yang diarsipkan.</div>`;
+    return;
+  }
+  state.arsip.slice().reverse().forEach((a, i) => {
+    const row = document.createElement("div");
+    row.className = "history-row";
+    row.innerHTML = `
+      <div class="history-top">
+        <span class="history-date">Babak ${state.arsip.length - i} · ${a.tanggal}</span>
+        <span class="history-count">Lv.${a.level}</span>
+      </div>
+      <div class="history-note">🏁 ${a.hari} hari · ${a.totalDone} misi · ${a.expTotal} EXP</div>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function setupBabakBaru() {
+  const btn = document.getElementById("babak-baru-btn");
+  if (btn) btn.addEventListener("click", mulaiBabakBaru);
 }
 
 
@@ -2576,6 +2648,7 @@ setupGoals();        // Tahap 29: form target jangka panjang
 setupMode();         // Tahap 31: toggle mode gelap/terang
 setupShare();        // Tahap 35: tombol share kartu progres
 setupCariRiwayat();  // Tahap 43: kotak cari di riwayat
+setupBabakBaru();    // Tahap 47: tombol mulai babak baru
 render();
 
 // Tahap 43: ketik di kotak cari -> gambar ulang riwayat (terfilter).
