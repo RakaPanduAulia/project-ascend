@@ -1154,8 +1154,8 @@ body.theme-gold .switch input:checked + .slider {
   user-select: none;
 }
 .misi-editor > summary::-webkit-details-marker { display: none; }
-.misi-editor > summary::before { content: "â–¸ "; }
-.misi-editor[open] > summary::before { content: "â–¾ "; }
+.misi-editor > summary::before { content: "\25B8\00A0"; }
+.misi-editor[open] > summary::before { content: "\25BE\00A0"; }
 
 /* Form tambah misi */
 .misi-form { margin: 10px 0 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -1645,20 +1645,29 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 body.mode-terang {
   --bg:        #f4f6fc;
   --card:      #ffffff;
-  --card-2:    #eaf0ff;
-  --card-hi:   #dde7ff;
+  --card-2:    #e4ecff;
+  --card-hi:   #d4e0ff;
   --surface-2: #eef2fb;
-  --border:    #c9d6f5;
-  --text:      #141a2e;
-  --text-2:    #243156;
-  --muted:     #5a678f;
-  --sky:       #1f47e8;   /* di latar terang, biru muda susah kebaca -> pakai biru pekat */
+  --border:    #b9c8ec;
+  --text:      #0f1526;   /* teks utama: gelap pekat biar kontras di latar terang */
+  --text-2:    #1e2a4a;
+  --muted:     #4a5878;   /* teks redup: cukup gelap biar tetap kebaca */
+  /* Keluarga aksen dibikin PEKAT di mode terang -> teks biru/aksen di atas
+     kartu putih tetap kebaca (yang lama #4d6bff terlalu muda, nyatu). */
+  --accent:    #1f47e8;
+  --accent-2:  #2a52d8;
   --accent-3:  #3a5bd0;
+  --sky:       #1b4fd0;
   background: radial-gradient(1200px 500px at 50% -10%, rgba(31,71,232,0.08), transparent 70%), var(--bg);
   background-attachment: fixed;
   color: var(--text);
 }
-body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
+body.mode-terang .navbar { background: rgba(255,255,255,0.95); }
+/* Pastikan teks default & judul ikut warna teks terang (bukan nyangkut gelap). */
+body.mode-terang .day-title,
+body.mode-terang .page-title,
+body.mode-terang .name,
+body.mode-terang .ringkas-nilai { color: var(--text); }
 
 
 /* ===================================================================== */
@@ -1893,4 +1902,20 @@ textarea:focus-visible,
   color: var(--text);
   line-height: 1.5;
   margin-bottom: 14px;
+}
+
+
+/* ===================================================================== */
+/*  FIX iOS — cegah zoom otomatis saat fokus input (Safari iPhone)        */
+/*  iOS Safari auto-zoom kalau font input < 16px. Paksa 16px.             */
+/* ===================================================================== */
+input,
+select,
+textarea,
+.misi-input,
+.misi-select,
+.misi-exp-input,
+.modal-input,
+.reminder-time {
+  font-size: 16px;
 }
