@@ -1422,3 +1422,288 @@ body.theme-gold .modal-btn.simpan { background: #b8860b; }
 
 body.theme-gold .ringkas-fokus-kartu { border-color: #b8860b; }
 body.theme-gold .ringkas-fokus-cat { color: #e8c35a; }
+
+
+/* ===================================================================== */
+/*  BLOK A (Tahap 22-26) — onboarding, mood, kutipan, tema, statistik     */
+/* ===================================================================== */
+
+/* --- Tahap 24: Tema warna (override variabel aksen) --- */
+/* Hanya mengubah --accent & --accent-2; elemen yang pakai variabel ini
+   (nav aktif, exp-fill, dll) ikut berubah. Tema biru = default :root. */
+body.tema-ungu  { --accent: #7c3aed; --accent-2: #a78bfa; }
+body.tema-hijau { --accent: #0e9f6e; --accent-2: #34d399; }
+body.tema-merah { --accent: #e02424; --accent-2: #f87171; }
+/* Latar radial ikut warna tema biar berpadu. */
+body.tema-ungu  { background: radial-gradient(1200px 500px at 50% -10%, rgba(124,58,237,0.14), transparent 70%), var(--bg); background-attachment: fixed; }
+body.tema-hijau { background: radial-gradient(1200px 500px at 50% -10%, rgba(14,159,110,0.14), transparent 70%), var(--bg); background-attachment: fixed; }
+body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224,36,36,0.14), transparent 70%), var(--bg); background-attachment: fixed; }
+
+.tema-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tema-opt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #e8eaf4;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tema-opt.aktif { border-color: var(--accent); box-shadow: 0 0 10px rgba(31,71,232,0.4); }
+.tema-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+
+/* --- Tahap 26: Kutipan harian --- */
+.kutipan {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--accent-2);
+  text-align: center;
+  line-height: 1.5;
+  margin: 2px 0 14px;
+  padding: 0 6px;
+}
+
+/* --- Tahap 25: Mood harian --- */
+.mood-picker { display: flex; gap: 8px; justify-content: space-between; }
+.mood-opt {
+  flex: 1;
+  font-size: 26px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  filter: grayscale(0.5) opacity(0.65);
+  transition: filter 0.15s, transform 0.15s, border-color 0.15s;
+}
+.mood-opt.aktif {
+  filter: none;
+  border-color: var(--accent);
+  background: #15204a;
+  transform: scale(1.06);
+}
+
+/* --- Tahap 23: Statistik terbaik --- */
+.statistik-terbaik {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--accent-2);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* --- Tahap 22: Onboarding overlay --- */
+.onboard-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 400px at 50% -5%, rgba(31,71,232,0.22), transparent 70%),
+    #0a0d16;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+.onboard-overlay.show { display: flex; }
+.onboard-card {
+  width: 100%;
+  max-width: 360px;
+  background: #121a33;
+  border: 1px solid var(--accent);
+  border-radius: 18px;
+  padding: 26px 22px;
+  box-shadow: 0 16px 50px rgba(0,0,0,0.55);
+}
+.onboard-logo {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-align: center;
+  text-shadow: 0 0 22px rgba(31,71,232,0.6);
+}
+.onboard-tagline {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+  margin: 8px 0 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-opt { transition: none; }
+}
+
+
+/* ===================================================================== */
+/*  BLOK B (Tahap 27-31) — kategori, jadwal, goals, catatan, mode terang  */
+/* ===================================================================== */
+
+/* --- Tahap 28: Jadwal hari di form misi --- */
+.misi-jadwal-wrap { margin-top: 10px; }
+.misi-jadwal-label { font-size: 11px; color: #8a97c2; display: block; margin-bottom: 6px; }
+.misi-hari { display: flex; gap: 5px; flex-wrap: wrap; }
+.hari-opt {
+  flex: 1;
+  min-width: 38px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #cdd6f4;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hari-opt.aktif { background: var(--accent); color: #fff; border-color: var(--accent); }
+.misi-jadwal-tag, .misi-note-tag {
+  font-size: 10px;
+  color: var(--accent-2);
+  font-weight: 600;
+  margin-left: 6px;
+}
+.misi-note-tag { display: block; margin: 3px 0 0; opacity: 0.85; }
+
+/* --- Tahap 27: Kategori chips --- */
+.kategori-kelola { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(26,58,138,0.4); }
+.kategori-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.kat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  color: #cdd6f4;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+.kat-del {
+  background: transparent; border: none; color: #ff6b8a;
+  font-size: 11px; cursor: pointer; padding: 0; line-height: 1;
+}
+
+/* --- Tahap 30: tombol catatan di editor misi --- */
+.misi-note-btn {
+  background: transparent;
+  border: 1px solid #2a3f6e;
+  color: #cdd6f4;
+  font-size: 12px;
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.misi-note-btn:hover { background: #16233f; }
+
+/* --- Tahap 29: Goals --- */
+.goals-empty { font-size: 13px; color: #8a97c2; text-align: center; padding: 10px 0; }
+.goal-item {
+  background: #0f1733;
+  border: 1px solid #1a3a8a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.goal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.goal-nama { font-size: 14px; font-weight: 700; }
+.goal-del { background: transparent; border: none; color: #ff6b8a; font-size: 13px; cursor: pointer; }
+.goal-track { height: 9px; background: #0b1a4d; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.goal-fill { height: 100%; background: var(--accent); }
+.goal-foot { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.goal-min, .goal-plus {
+  background: #16233f; border: 1px solid #1a3a8a; color: #cdd6f4;
+  font-size: 16px; font-weight: 700; width: 34px; height: 30px;
+  border-radius: 9px; cursor: pointer;
+}
+.goal-num { font-size: 13px; color: #8a97c2; min-width: 70px; text-align: center; }
+
+/* --- Tahap 31: Mode terang (flip variabel tema) --- */
+body.mode-terang {
+  --bg:     #f4f6fc;
+  --card:   #ffffff;
+  --card-2: #eaf0ff;
+  --border: #c9d6f5;
+  --text:   #141a2e;
+  --muted:  #5a678f;
+}
+body.mode-terang {
+  background: radial-gradient(1200px 500px at 50% -10%, rgba(31,71,232,0.08), transparent 70%), var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+}
+/* Surface utama yang hardcoded gelap -> ikut terang pas mode terang. */
+body.mode-terang .section,
+body.mode-terang .ringkas-kartu,
+body.mode-terang .goal-item,
+body.mode-terang .mission,
+body.mode-terang .misi-edit-row,
+body.mode-terang .kat-chip,
+body.mode-terang .modal-input,
+body.mode-terang .misi-input,
+body.mode-terang .misi-select,
+body.mode-terang .misi-exp-input {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
+body.mode-terang .kutipan { color: var(--accent); }
+
+
+/* ===================================================================== */
+/*  BLOK C (Tahap 32-36) — animasi halus, empty state, undo, share        */
+/* ===================================================================== */
+
+/* --- Tahap 32: transisi halaman lebih halus (slide-up + fade) --- */
+.page.active { animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Kartu misi masuk dengan sedikit delay berurutan (stagger halus). */
+.mission { animation: card-in 0.3s ease both; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Tahap 33: empty state yang ramah --- */
+.chart-empty, .history-empty, .goals-empty {
+  background: rgba(15, 23, 51, 0.4);
+  border: 1px dashed #2a3f6e;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #8a97c2;
+  line-height: 1.5;
+}
+
+/* --- Tahap 34: tombol UNDO di toast --- */
+.toast-undo {
+  margin-left: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- Tahap 35: tombol share (pakai gaya backup export) --- */
+#share-btn { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page.active, .mission { animation: none; }
+}
