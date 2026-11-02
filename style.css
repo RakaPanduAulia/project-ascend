@@ -1149,8 +1149,10 @@ body.theme-gold .switch input:checked + .slider {
   user-select: none;
 }
 .misi-editor > summary::-webkit-details-marker { display: none; }
-.misi-editor > summary::before { content: "▸ "; }
-.misi-editor[open] > summary::before { content: "▾ "; }
+/* Pakai unicode escape (bukan karakter mentah) biar gak rusak jadi "â–¸"
+   di sebagian browser/HP. \25B8 = ▸ (tutup), \25BE = ▾ (buka). */
+.misi-editor > summary::before { content: "\25B8\00A0"; }
+.misi-editor[open] > summary::before { content: "\25BE\00A0"; }
 
 /* Form tambah misi */
 .misi-form { margin: 10px 0 14px; display: flex; flex-direction: column; gap: 8px; }
