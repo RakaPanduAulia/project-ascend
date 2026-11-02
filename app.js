@@ -1187,6 +1187,7 @@ function render() {
   renderStatistik();  // Tahap 23: statistik mendalam (tab Info)
   renderMood();       // Tahap 25: mood harian (Home)
   renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
+  renderTip();        // Tahap 50: tips pintar berdasar pola (Home)
   renderGoals();      // Tahap 29: target jangka panjang (tab Info)
   renderMoodHistory();// Tahap 42: riwayat mood 7 hari (tab Info)
   renderArsip();      // Tahap 47: daftar babak lama (tab Lainnya)
@@ -2365,6 +2366,33 @@ function renderKutipan() {
   const el = document.getElementById("kutipan-hari");
   if (!el) return;
   el.textContent = "\u201C" + kutipanHariIni() + "\u201D";
+}
+
+
+// Tahap 50: TIPS PINTAR — saran berdasar pola data (bukan acak).
+// Aturan sederhana & transparan: cek kondisi, kasih saran yang paling relevan.
+function tipHariIni() {
+  // 1) Streak putus / rendah -> dorong konsistensi.
+  if (state.streak === 0) return "🔥 Streak kamu 0. Kelarin 1 misi aja hari ini buat mulai lagi.";
+  // 2) Stat paling rendah -> saran fokus.
+  const statArr = [
+    { k: "body", label: "fisik" }, { k: "mind", label: "mental" },
+    { k: "looks", label: "perawatan" }, { k: "discipline", label: "disiplin" },
+  ];
+  let minStat = statArr[0], minVal = state.stats[statArr[0].k];
+  statArr.forEach(s => { if (state.stats[s.k] < minVal) { minVal = state.stats[s.k]; minStat = s; } });
+  if (minVal < 55) return `📊 Stat ${minStat.label} kamu paling rendah (${minVal}). Coba fokus misi ${minStat.label} hari ini.`;
+  // 3) Gizi protein kurang dari separuh target -> saran gizi.
+  if (state.gizi.protein < state.giziTarget.protein / 2) return "🍗 Protein hari ini masih kurang. Jangan lupa makan cukup protein.";
+  // 4) Belum nulis jurnal -> dorong refleksi.
+  if (!state.jurnal || state.jurnal.trim() === "") return "📓 Belum nulis jurnal hari ini. Luangin 1 menit buat refleksi.";
+  // 5) Semua oke -> apresiasi.
+  return "✨ Pola kamu bagus. Pertahankan ritmenya!";
+}
+function renderTip() {
+  const el = document.getElementById("tip-hari");
+  if (!el) return;
+  el.textContent = "💡 " + tipHariIni();
 }
 
 

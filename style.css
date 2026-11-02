@@ -1878,3 +1878,19 @@ textarea:focus-visible,
   color: var(--muted);
 }
 .kalender-legend .kal-sel { width: 13px; height: 13px; aspect-ratio: auto; }
+
+
+/* ===================================================================== */
+/*  TAHAP 50 — Tips pintar harian                                         */
+/* ===================================================================== */
+.tip-pintar {
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
