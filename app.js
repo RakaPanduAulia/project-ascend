@@ -1496,8 +1496,23 @@ function renderHistory() {
     return;
   }
 
-  // slice().reverse() -> salin lalu balik urutan (terbaru dulu).
-  state.history.slice().reverse().forEach(hari => {
+  // Tahap 43: filter riwayat pakai kata kunci (cocokkan tanggal / isi jurnal).
+  const cariEl = document.getElementById("history-cari");
+  const kunci = cariEl ? cariEl.value.trim().toLowerCase() : "";
+
+  let daftar = state.history.slice().reverse();
+  if (kunci) {
+    daftar = daftar.filter(h =>
+      (h.date || "").toLowerCase().includes(kunci) ||
+      (h.jurnal || "").toLowerCase().includes(kunci)
+    );
+  }
+  if (daftar.length === 0) {
+    box.innerHTML = `<div class="history-empty">Gak ada riwayat yang cocok "${escapeHtml(kunci)}".</div>`;
+    return;
+  }
+
+  daftar.forEach(hari => {
     const row = document.createElement("div");
     row.className = "history-row";
     // Kalau hari itu ada catatan jurnal, tampilkan di bawah tanggal.
@@ -2453,7 +2468,14 @@ setupJadwal();       // Tahap 28: tombol hari di form misi
 setupGoals();        // Tahap 29: form target jangka panjang
 setupMode();         // Tahap 31: toggle mode gelap/terang
 setupShare();        // Tahap 35: tombol share kartu progres
+setupCariRiwayat();  // Tahap 43: kotak cari di riwayat
 render();
+
+// Tahap 43: ketik di kotak cari -> gambar ulang riwayat (terfilter).
+function setupCariRiwayat() {
+  const inp = document.getElementById("history-cari");
+  if (inp) inp.addEventListener("input", renderHistory);
+}
 
 // Tahap 39: sembunyikan splash begitu render pertama selesai (anti-kedip).
 (function sembunyikanSplash() {
