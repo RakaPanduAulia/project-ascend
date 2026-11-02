@@ -1799,3 +1799,20 @@ textarea:focus-visible,
 }
 /* Kartu misi bisa difokus & ditekan Enter/Spasi (keyboard). */
 .mission { }
+
+
+/* ===================================================================== */
+/*  TAHAP 42 — Riwayat mood 7 hari                                        */
+/* ===================================================================== */
+.mood-history { display: flex; gap: 6px; justify-content: space-between; }
+.moodh-kolom {
+  flex: 1;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 2px 7px;
+}
+.moodh-kolom.hari-ini { border-color: var(--accent); box-shadow: 0 0 8px rgba(31,71,232,0.3); }
+.moodh-emoji { font-size: 20px; line-height: 1.2; }
+.moodh-hari { font-size: 10px; color: var(--muted); margin-top: 4px; }

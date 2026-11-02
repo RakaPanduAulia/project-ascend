@@ -1130,6 +1130,7 @@ function render() {
   renderMood();       // Tahap 25: mood harian (Home)
   renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
   renderGoals();      // Tahap 29: target jangka panjang (tab Info)
+  renderMoodHistory();// Tahap 42: riwayat mood 7 hari (tab Info)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -2004,6 +2005,34 @@ function renderMood() {
     b.addEventListener("click", () => setMood(m));
     box.appendChild(b);
   });
+}
+
+
+// Tahap 42: RIWAYAT MOOD — baris emoji 7 hari terakhir (tab Info).
+// Hari tanpa mood ditandai titik. Dibaca dari state.mood (keyed tanggal).
+function tanggalMundur(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+const HARI_SINGKAT = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+function renderMoodHistory() {
+  const box = document.getElementById("mood-history");
+  if (!box) return;
+  box.innerHTML = "";
+  // 7 hari: dari 6 hari lalu sampai hari ini.
+  for (let i = 6; i >= 0; i--) {
+    const tgl = tanggalMundur(i);
+    const emoji = state.mood[tgl] || "·";
+    const dow = HARI_SINGKAT[new Date(tgl).getDay()];
+    const kolom = document.createElement("div");
+    kolom.className = "moodh-kolom" + (i === 0 ? " hari-ini" : "");
+    kolom.innerHTML = `
+      <div class="moodh-emoji">${emoji}</div>
+      <div class="moodh-hari">${dow}</div>
+    `;
+    box.appendChild(kolom);
+  }
 }
 
 
