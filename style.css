@@ -1656,3 +1656,54 @@ body.mode-terang .misi-exp-input {
 }
 body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
 body.mode-terang .kutipan { color: var(--accent); }
+
+
+/* ===================================================================== */
+/*  BLOK C (Tahap 32-36) — animasi halus, empty state, undo, share        */
+/* ===================================================================== */
+
+/* --- Tahap 32: transisi halaman lebih halus (slide-up + fade) --- */
+.page.active { animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Kartu misi masuk dengan sedikit delay berurutan (stagger halus). */
+.mission { animation: card-in 0.3s ease both; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Tahap 33: empty state yang ramah --- */
+.chart-empty, .history-empty, .goals-empty {
+  background: rgba(15, 23, 51, 0.4);
+  border: 1px dashed #2a3f6e;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #8a97c2;
+  line-height: 1.5;
+}
+
+/* --- Tahap 34: tombol UNDO di toast --- */
+.toast-undo {
+  margin-left: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- Tahap 35: tombol share (pakai gaya backup export) --- */
+#share-btn { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page.active, .mission { animation: none; }
+}

@@ -789,15 +789,30 @@ function hapusKategori(nama) {
 }
 
 // Hapus satu misi. Kalau lagi dicentang hari ini, batalin dulu efeknya
-// biar EXP/stat/poin gak nyangkut.
+// biar EXP/stat/poin gak nyangkut. Tahap 34: simpan buat UNDO.
+let _misiTerhapus = null; // { mission, index } buat undo
 function hapusMisi(id) {
   if (state.done.includes(id)) {
     toggleMission(id); // batalin centang -> EXP/stat/poin balik rapi
   }
+  const idx = state.missions.findIndex(m => m.id === id);
+  if (idx === -1) return;
+  _misiTerhapus = { mission: state.missions[idx], index: idx };
   state.missions = state.missions.filter(m => m.id !== id);
   save();
   render();
-  toastInfo("🗑️ Misi dihapus.");
+  toastUndo("🗑️ Misi dihapus.", undoHapusMisi); // Tahap 34: kasih opsi undo
+}
+
+// Tahap 34: kembalikan misi yang barusan dihapus ke posisi semula.
+function undoHapusMisi() {
+  if (!_misiTerhapus) return;
+  const { mission, index } = _misiTerhapus;
+  state.missions.splice(Math.min(index, state.missions.length), 0, mission);
+  _misiTerhapus = null;
+  save();
+  render();
+  toastInfo("↩️ Misi dikembalikan.");
 }
 
 // Pulihkan daftar misi ke default (buang semua perubahan user).
@@ -970,6 +985,22 @@ function toastInfo(teks) {
   toast.innerHTML = teks;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+// Tahap 34: toast dengan tombol UNDO. Klik tombol -> jalankan aksiUndo.
+let _undoTimer = null;
+function toastUndo(teks, aksiUndo) {
+  const toast = document.getElementById("toast");
+  if (!toast) { if (aksiUndo) aksiUndo(); return; }
+  clearTimeout(_undoTimer);
+  toast.innerHTML = `${teks} <button class="toast-undo">URUNGKAN</button>`;
+  toast.classList.add("show");
+  const btn = toast.querySelector(".toast-undo");
+  btn.addEventListener("click", () => {
+    toast.classList.remove("show");
+    if (aksiUndo) aksiUndo();
+  });
+  _undoTimer = setTimeout(() => toast.classList.remove("show"), 5000); // kasih waktu lebih buat undo
 }
 
 
@@ -1622,6 +1653,7 @@ setupJadwal();       // Tahap 28: tombol hari di form misi
 setupGoals();        // Tahap 29: form target jangka panjang
 setupMode();         // Tahap 31: toggle mode gelap/terang
 applyMode();         // pasang mode gelap/terang pas load
+setupShare();        // Tahap 35: tombol share kartu progres
 render();
 
 
@@ -1777,6 +1809,95 @@ function setupMode() {
     save(); applyMode();
     toastInfo(state.mode === "terang" ? "☀️ Mode terang" : "🌙 Mode gelap");
   });
+}
+
+
+// ---------------------------------------------------------------------
+//  BLOK C — Tahap 32-36
+// ---------------------------------------------------------------------
+
+// Tahap 35: SHARE KARTU PROGRES — gambar kartu "Day X / Level Y" di canvas,
+// lalu download sebagai PNG. Semua digambar dari kode (gak butuh file).
+function shareKartu() {
+  const W = 600, H = 800;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (!ctx) { toastInfo("Browser gak dukung canvas."); return; }
+
+  // Latar gradient gelap biru.
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#17204a");
+  g.addColorStop(1, "#0b0e18");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+
+  // Judul ASCEND.
+  ctx.fillStyle = "#4d6bff";
+  ctx.font = "800 64px 'Segoe UI', sans-serif";
+  ctx.fillText("ASCEND", W / 2, 110);
+
+  // Avatar + nama.
+  ctx.font = "90px sans-serif";
+  ctx.fillText(state.profil.avatar, W / 2, 230);
+  ctx.fillStyle = "#e8eaf4";
+  ctx.font = "700 40px 'Segoe UI', sans-serif";
+  ctx.fillText(state.profil.nama, W / 2, 300);
+  ctx.fillStyle = "#7fd0ff";
+  ctx.font = "600 26px 'Segoe UI', sans-serif";
+  ctx.fillText("Lv." + state.level + " · " + gelarSekarang(), W / 2, 345);
+
+  // Day X / 66.
+  ctx.fillStyle = "#e8eaf4";
+  ctx.font = "800 100px 'Segoe UI', sans-serif";
+  ctx.fillText("DAY " + dayNumber(), W / 2, 470);
+  ctx.fillStyle = "#8a97c2";
+  ctx.font = "500 30px 'Segoe UI', sans-serif";
+  ctx.fillText("dari 66 hari", W / 2, 510);
+
+  // Baris statistik: streak, total misi, EXP.
+  const stats = [
+    ["🔥", state.streak, "Streak"],
+    ["🏅", state.totalDone || 0, "Misi"],
+    ["✨", expTerkumpul(), "EXP"],
+  ];
+  stats.forEach((s, i) => {
+    const x = W / 2 + (i - 1) * 180;
+    ctx.font = "48px sans-serif";
+    ctx.fillText(s[0], x, 610);
+    ctx.fillStyle = "#e8eaf4";
+    ctx.font = "800 36px 'Segoe UI', sans-serif";
+    ctx.fillText(String(s[1]), x, 655);
+    ctx.fillStyle = "#8a97c2";
+    ctx.font = "500 22px 'Segoe UI', sans-serif";
+    ctx.fillText(s[2], x, 688);
+  });
+
+  // Footer.
+  ctx.fillStyle = "#4d6bff";
+  ctx.font = "italic 24px 'Segoe UI', sans-serif";
+  ctx.fillText("Naik ke versi terbaik diri.", W / 2, 760);
+
+  // Download.
+  c.toBlob(blob => {
+    if (!blob) { toastInfo("Gagal bikin gambar."); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ascend-day" + dayNumber() + ".png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toastInfo("📸 Kartu progres kedownload!");
+  }, "image/png");
+}
+
+function setupShare() {
+  const btn = document.getElementById("share-btn");
+  if (btn) btn.addEventListener("click", shareKartu);
 }
 
 
