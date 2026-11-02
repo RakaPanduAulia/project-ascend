@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <title>Ascend</title>
   <!-- Tahap 21 (PWA): manifest + warna + ikon biar bisa di-install di HP -->
   <link rel="manifest" href="manifest.json" />
@@ -11,6 +11,12 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Splash (Tahap 39): nutup layar sampai render pertama kelar, biar gak kedip -->
+  <div class="splash" id="splash">
+    <div class="splash-logo">ASCEND</div>
+    <div class="splash-spin"></div>
+  </div>
+
   <div class="app">
 
     <!-- ============ HALAMAN: HOME ============ -->
@@ -51,21 +57,24 @@
       <!-- Kutipan motivasi harian (Tahap 26) -->
       <div class="kutipan" id="kutipan-hari"></div>
 
+      <!-- Tips pintar harian (Tahap 50) -->
+      <div class="tip-pintar" id="tip-hari"></div>
+
       <!-- Mood harian (Tahap 25) -->
       <section class="section">
-        <h2 class="day-title" style="margin-top:0;">💭 Mood Hari Ini</h2>
+        <h2 class="day-title">💭 Mood Hari Ini</h2>
         <div class="mood-picker" id="mood-picker"></div>
       </section>
 
       <!-- 4 Stat -->
       <section class="section">
-        <h2 class="day-title" style="margin-top:0;">📊 Stat</h2>
+        <h2 class="day-title">📊 Stat</h2>
         <div class="stat-list" id="stat-list"></div>
       </section>
 
       <!-- Misi utama -->
       <section class="section">
-        <h2 class="day-title" style="margin-top:0;">🗺️ Misi Hari Ini</h2>
+        <h2 class="day-title">🗺️ Misi Hari Ini</h2>
         <div class="mission-list" id="mission-list"></div>
         <div class="pep-talk" id="pep-talk"></div>
       </section>
@@ -109,13 +118,13 @@
 
       <!-- Challenge mingguan -->
       <section class="section">
-        <h2 class="day-title" style="margin-top:0;">📅 Challenge Minggu Ini</h2>
+        <h2 class="day-title">📅 Challenge Minggu Ini</h2>
         <div class="weekly-list" id="weekly-list"></div>
       </section>
 
       <!-- Jurnal harian -->
       <section class="section">
-        <h2 class="day-title" style="margin-top:0;">📓 Jurnal Hari Ini</h2>
+        <h2 class="day-title">📓 Jurnal Hari Ini</h2>
         <p class="jurnal-hint">Tulis 1 catatan: gimana harimu, apa yang kamu rasain. (+5 💎 pertama kali nulis)</p>
         <textarea class="jurnal-input" id="jurnal-input" rows="4"
           placeholder="Hari ini aku..."></textarea>
@@ -128,16 +137,34 @@
       <section class="section">
         <div class="ringkas-grid" id="ringkas-grid"></div>
       </section>
-      <h1 class="page-title" style="margin-top:22px;">🎯 Fokus Sekarang</h1>
+      <h1 class="page-title sub">🎯 Fokus Sekarang</h1>
       <section class="section">
         <div class="ringkas-fokus" id="ringkas-fokus"></div>
       </section>
-      <h1 class="page-title" style="margin-top:22px;">📈 Statistik</h1>
+      <h1 class="page-title sub">🟩 Kalender Kontribusi</h1>
+      <section class="section">
+        <div class="kalender-grid" id="kalender-grid"></div>
+        <div class="kalender-legend">
+          <span>Sedikit</span>
+          <span class="kal-sel kal-lv0"></span>
+          <span class="kal-sel kal-lv1"></span>
+          <span class="kal-sel kal-lv2"></span>
+          <span class="kal-sel kal-lv3"></span>
+          <span class="kal-sel kal-lv4"></span>
+          <span>Banyak</span>
+        </div>
+      </section>
+
+      <h1 class="page-title sub">💭 Mood 7 Hari</h1>
+      <section class="section">
+        <div class="mood-history" id="mood-history"></div>
+      </section>
+      <h1 class="page-title sub">📈 Statistik</h1>
       <section class="section">
         <div class="ringkas-grid" id="statistik-grid"></div>
         <div class="statistik-terbaik" id="statistik-terbaik"></div>
       </section>
-      <h1 class="page-title" style="margin-top:22px;">🎯 Target Jangka Panjang</h1>
+      <h1 class="page-title sub">🎯 Target Jangka Panjang</h1>
       <section class="section">
         <div class="goals-list" id="goals-list"></div>
         <div class="misi-form-row" style="margin-top:12px;">
@@ -178,16 +205,17 @@
       <section class="section">
         <div class="chart-box" id="chart-box"></div>
       </section>
-      <h1 class="page-title" style="margin-top:22px;">🏆 Achievements <span class="ach-count" id="achievement-count">0 / 8</span></h1>
+      <h1 class="page-title sub">🏆 Achievements <span class="ach-count" id="achievement-count">0 / 8</span></h1>
       <section class="section">
         <div class="achievement-grid" id="achievement-grid"></div>
       </section>
-      <h1 class="page-title" style="margin-top:22px;">📒 Riwayat</h1>
+      <h1 class="page-title sub">📒 Riwayat</h1>
       <section class="section">
+        <input type="text" id="history-cari" class="misi-input" placeholder="🔍 Cari tanggal atau isi jurnal…" style="margin-bottom:12px;" />
         <div class="history-list" id="history-list"></div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">⏰ Pengingat</h1>
+      <h1 class="page-title sub">⏰ Pengingat</h1>
       <section class="section">
         <div class="reminder-row">
           <div class="reminder-info">
@@ -208,13 +236,13 @@
         </div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">🎨 Tema Warna</h1>
+      <h1 class="page-title sub">🎨 Tema Warna</h1>
       <section class="section">
         <p class="jurnal-hint">Pilih warna aksen app sesuai selera.</p>
         <div class="tema-picker" id="tema-picker"></div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">🌙 Mode Tampilan</h1>
+      <h1 class="page-title sub">🌙 Mode Tampilan</h1>
       <section class="section">
         <div class="reminder-row">
           <div class="reminder-info">
@@ -228,7 +256,7 @@
         </div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">🔊 Suara & Getar</h1>
+      <h1 class="page-title sub">🔊 Suara & Getar</h1>
       <section class="section">
         <div class="reminder-row">
           <div class="reminder-info">
@@ -242,13 +270,33 @@
         </div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">📸 Bagikan Progres</h1>
+      <h1 class="page-title sub">📸 Bagikan Progres</h1>
       <section class="section">
         <p class="jurnal-hint">Bikin kartu "Day X / Level Y" buat dipamerin ke sosmed.</p>
-        <button id="share-btn" class="backup-btn export">📸 Buat Kartu Progres</button>
+        <div class="backup-btns">
+          <button id="share-btn" class="backup-btn export">📸 Kartu Progres</button>
+          <button id="weekly-export-btn" class="backup-btn import">📊 Ringkasan Mingguan</button>
+        </div>
       </section>
 
-      <h1 class="page-title" style="margin-top:22px;">💾 Backup Data</h1>
+      <h1 class="page-title sub">👥 Profil</h1>
+      <section class="section">
+        <p class="jurnal-hint">Punya beberapa profil (mis. diri sendiri + eksperimen). Tiap profil datanya terpisah.</p>
+        <div class="slot-list" id="profil-slot-list"></div>
+        <div class="misi-form-row" style="margin-top:10px;">
+          <input type="text" id="slot-nama" class="misi-input" placeholder="Nama profil baru" />
+          <button id="slot-add-btn" class="misi-add-btn">+ Profil</button>
+        </div>
+      </section>
+
+      <h1 class="page-title sub">🌅 Babak Baru</h1>
+      <section class="section">
+        <p class="jurnal-hint">Mulai dari Day 1 lagi tanpa hilang riwayat. Progres lama diarsipkan di bawah.</p>
+        <button id="babak-baru-btn" class="backup-btn import">🌅 Mulai Babak Baru</button>
+        <div class="arsip-list" id="arsip-list" style="margin-top:12px;"></div>
+      </section>
+
+      <h1 class="page-title sub">💾 Backup Data</h1>
       <section class="section">
         <p class="jurnal-hint">Data kamu cuma tersimpan di browser ini. Backup ke file biar aman kalau ganti HP atau cache kehapus.</p>
         <div class="backup-btns">
@@ -263,12 +311,12 @@
 
   <!-- ============ NAV BAR BAWAH ============ -->
   <nav class="navbar" id="navbar">
-    <button class="nav-btn active" data-page="home"><span class="nav-ico">🏠</span><span>Home</span></button>
-    <button class="nav-btn" data-page="info"><span class="nav-ico">📊</span><span>Info</span></button>
-    <button class="nav-btn" data-page="gizi"><span class="nav-ico">🍎</span><span>Gizi</span></button>
-    <button class="nav-btn" data-page="skill"><span class="nav-ico">⚔️</span><span>Skill</span></button>
-    <button class="nav-btn" data-page="shop"><span class="nav-ico">🛒</span><span>Shop</span></button>
-    <button class="nav-btn" data-page="more"><span class="nav-ico">🏆</span><span>Lainnya</span></button>
+    <button class="nav-btn active" data-page="home" aria-label="Halaman Home"><span class="nav-ico">🏠</span><span>Home</span></button>
+    <button class="nav-btn" data-page="info" aria-label="Halaman Info"><span class="nav-ico">📊</span><span>Info</span></button>
+    <button class="nav-btn" data-page="gizi" aria-label="Halaman Gizi"><span class="nav-ico">🍎</span><span>Gizi</span></button>
+    <button class="nav-btn" data-page="skill" aria-label="Halaman Skill"><span class="nav-ico">⚔️</span><span>Skill</span></button>
+    <button class="nav-btn" data-page="shop" aria-label="Halaman Shop"><span class="nav-ico">🛒</span><span>Shop</span></button>
+    <button class="nav-btn" data-page="more" aria-label="Halaman Lainnya"><span class="nav-ico">🏆</span><span>Lainnya</span></button>
   </nav>
 
   <!-- Layar sambutan / onboarding (Tahap 22) — muncul sekali di awal -->

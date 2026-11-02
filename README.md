@@ -49,6 +49,27 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 35:** Share kartu progres — canvas 600×800 gambar Day/Level/streak/avatar, download PNG.
 - **Tahap 36:** Polish & audit — konsistensi penamaan, komentar per bagian, cek integrasi (no dup fn, 6 page=6 nav, semua ID terhubung).
 
+### Blok D (Tahap 37-41) — rapihin
+- **37:** Full recolor — semua warna hardcoded → variabel CSS; tema & mode terang jadi total.
+- **38:** Konsistensi spasi — inline margin → kelas (`.page-title.sub`).
+- **39:** Splash/loading anti-kedip saat buka app.
+- **40:** Aksesibilitas — aria-label, `:focus-visible`, misi bisa Enter/Spasi.
+- **41:** Empty state misi kosong + seragam (pakai variabel).
+
+### Blok E (Tahap 42-46) — fitur isi
+- **42:** Riwayat mood 7 hari (baris emoji, tab Info).
+- **43:** Cari/filter riwayat jurnal.
+- **44:** Ekspor ringkasan mingguan ke PNG (canvas, tanpa library).
+- **45:** Notifikasi + bunyi pas goal tercapai.
+- **46:** Pengingat per-misi (field `jam`, tombol ⏰ di editor).
+
+### Blok F (Tahap 47-51) — pro & tahan lama
+- **47:** Mulai babak baru (arsip progres + reset; riwayat & misi disimpan).
+- **48:** Multi-profil (data per profil di key localStorage terpisah; utama tetap `ascend`).
+- **49:** Kalender kontribusi 3 bulan (warna by jumlah misi).
+- **50:** Tips pintar harian berdasar pola (streak/stat/gizi/jurnal).
+- **51:** Audit akhir + test menyeluruh.
+
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
 

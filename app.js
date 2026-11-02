@@ -216,6 +216,8 @@ let state = {
   goals: [],      // Tahap 29: target jangka panjang [{id,nama,target,nilai}]
   mode: "gelap",  // Tahap 31: mode gelap / terang
   misiNote: {},   // Tahap 30: catatan kecil per misi { misiId: "teks" }
+  misiReminderTanggal: {}, // Tahap 46: tanggal terakhir pengingat per-misi bunyi
+  arsip: [],      // Tahap 47: babak lama yang diarsipkan {tanggal, level, totalDone, hari}
 };
 
 
@@ -340,7 +342,58 @@ function expTerkumpul() {
 //  5) save() / load()  — simpan & baca state dari localStorage browser.
 // ---------------------------------------------------------------------
 function save() {
-  localStorage.setItem("ascend", JSON.stringify(state));
+  localStorage.setItem(storageKey(), JSON.stringify(state));
+}
+
+// ---------------------------------------------------------------------
+//  Tahap 48: MULTI-PROFIL
+//  Tiap profil punya data sendiri di localStorage key terpisah.
+//  Profil utama = key "ascend" (data lama kamu AMAN, gak dipindah).
+//  Profil ke-2 dst = "ascend_p<n>". Daftar & profil aktif disimpan di
+//  meta key "ascend_profiles" yang TERPISAH dari data profil.
+// ---------------------------------------------------------------------
+function bacaMetaProfil() {
+  try {
+    const m = JSON.parse(localStorage.getItem("ascend_profiles"));
+    if (m && Array.isArray(m.list) && m.aktif) return m;
+  } catch (e) {}
+  // Default: satu profil utama di key "ascend".
+  return { list: [{ key: "ascend", nama: "Utama" }], aktif: "ascend" };
+}
+function simpanMetaProfil(meta) {
+  localStorage.setItem("ascend_profiles", JSON.stringify(meta));
+}
+function storageKey() {
+  return bacaMetaProfil().aktif;
+}
+function gantiProfil(key) {
+  const meta = bacaMetaProfil();
+  if (!meta.list.some(p => p.key === key)) return;
+  meta.aktif = key;
+  simpanMetaProfil(meta);
+  location.reload(); // muat ulang -> load() baca profil baru dari awal
+}
+function tambahProfil(nama) {
+  nama = (nama || "").trim();
+  if (!nama) { toastInfo("✏️ Nama profil gak boleh kosong."); return; }
+  const meta = bacaMetaProfil();
+  if (meta.list.length >= 5) { toastInfo("Maksimal 5 profil."); return; }
+  const key = "ascend_p" + Date.now().toString(36);
+  meta.list.push({ key, nama: nama.slice(0, 20) });
+  meta.aktif = key;
+  simpanMetaProfil(meta);
+  // Profil baru belum punya data -> load() nanti bikin default fresh.
+  location.reload();
+}
+function hapusProfil(key) {
+  const meta = bacaMetaProfil();
+  if (key === "ascend") { toastInfo("Profil Utama gak bisa dihapus."); return; }
+  if (!confirm("Hapus profil ini beserta semua datanya? Gak bisa di-undo.")) return;
+  localStorage.removeItem(key);
+  meta.list = meta.list.filter(p => p.key !== key);
+  if (meta.aktif === key) meta.aktif = "ascend"; // balik ke utama
+  simpanMetaProfil(meta);
+  location.reload();
 }
 
 
@@ -397,7 +450,7 @@ function importData(file) {
       }
 
       // Tulis ke localStorage, lalu reload biar load() yang pasang & backfill.
-      localStorage.setItem("ascend", JSON.stringify(data));
+      localStorage.setItem(storageKey(), JSON.stringify(data)); // ke profil aktif
       toastInfo("📤 Data dipulihkan! Memuat ulang…");
       setTimeout(() => location.reload(), 600);
     } catch (e) {
@@ -410,7 +463,7 @@ function importData(file) {
 }
 
 function load() {
-  const saved = localStorage.getItem("ascend");
+  const saved = localStorage.getItem(storageKey()); // Tahap 48: profil aktif
   if (saved) {
     state = JSON.parse(saved);
   }
@@ -454,6 +507,8 @@ function load() {
   if (!state.goals) state.goals = [];
   if (!state.mode) state.mode = "gelap";
   if (!state.misiNote) state.misiNote = {};
+  if (!state.misiReminderTanggal) state.misiReminderTanggal = {};
+  if (!state.arsip) state.arsip = [];
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -848,12 +903,15 @@ function renderMisiEditor() {
       const row = document.createElement("div");
       row.className = "misi-edit-row";
       const adaJadwal = m.hari && m.hari.length > 0;
+      const tagJam = m.jam ? ` <span class="misi-jadwal-tag">⏰${m.jam}</span>` : "";
       row.innerHTML = `
-        <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}</div>
+        <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}${tagJam}</div>
         <div class="misi-edit-exp">+${m.exp}</div>
-        <button class="misi-note-btn" title="Catatan">📝</button>
-        <button class="misi-del" data-id="${m.id}" title="Hapus misi">✕</button>
+        <button class="misi-jam-btn" title="Pengingat jam" aria-label="Atur jam pengingat ${escapeHtml(m.name)}">⏰</button>
+        <button class="misi-note-btn" title="Catatan" aria-label="Catatan untuk ${escapeHtml(m.name)}">📝</button>
+        <button class="misi-del" data-id="${m.id}" title="Hapus misi" aria-label="Hapus misi ${escapeHtml(m.name)}">✕</button>
       `;
+      row.querySelector(".misi-jam-btn").addEventListener("click", () => editMisiJam(m.id));
       row.querySelector(".misi-note-btn").addEventListener("click", () => editMisiNote(m.id));
       row.querySelector(".misi-del").addEventListener("click", () => {
         if (confirm(`Hapus misi "${m.name}"?`)) hapusMisi(m.id);
@@ -1129,7 +1187,11 @@ function render() {
   renderStatistik();  // Tahap 23: statistik mendalam (tab Info)
   renderMood();       // Tahap 25: mood harian (Home)
   renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
+  renderTip();        // Tahap 50: tips pintar berdasar pola (Home)
   renderGoals();      // Tahap 29: target jangka panjang (tab Info)
+  renderMoodHistory();// Tahap 42: riwayat mood 7 hari (tab Info)
+  renderArsip();      // Tahap 47: daftar babak lama (tab Lainnya)
+  renderKalender();   // Tahap 49: kalender kontribusi (tab Info)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -1157,6 +1219,12 @@ function render() {
   const list = document.getElementById("mission-list");
   list.innerHTML = "";
 
+  // Tahap 41: empty state kalau hari ini gak ada misi sama sekali
+  // (mis. semua misi terjadwal & gak ada yang jadwalnya hari ini).
+  if (misiHariIni().length === 0) {
+    list.innerHTML = `<div class="mission-empty">🌙 Gak ada misi terjadwal hari ini. Tambah misi di "Atur Misi Sendiri".</div>`;
+  }
+
   // Gambar misi dikelompokkan per kategori. Misi terjadwal (Tahap 28) yang
   // bukan untuk hari ini disembunyikan via misiHariIni().
   kategoriAktif().forEach(cat => {
@@ -1173,6 +1241,12 @@ function render() {
       const card = document.createElement("div");
       card.className = "mission" + (selesai ? " done" : "");
       card.setAttribute("data-id", mission.id);
+      // Tahap 40: aksesibilitas — kartu bisa difokus & ditekan Enter/Spasi,
+      // dengan label yang jelas buat pembaca layar.
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-pressed", selesai ? "true" : "false");
+      card.setAttribute("aria-label", mission.name + (selesai ? " (selesai)" : ""));
       // Catatan per misi (Tahap 30): tampil di bawah nama kalau ada.
       const catatan = (state.misiNote && state.misiNote[mission.id]) || "";
       card.innerHTML = `
@@ -1181,6 +1255,9 @@ function render() {
         <div class="exp">+${mission.exp}</div>
       `;
       card.addEventListener("click", () => toggleMission(mission.id));
+      card.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleMission(mission.id); }
+      });
       list.appendChild(card);
     });
   });
@@ -1480,8 +1557,23 @@ function renderHistory() {
     return;
   }
 
-  // slice().reverse() -> salin lalu balik urutan (terbaru dulu).
-  state.history.slice().reverse().forEach(hari => {
+  // Tahap 43: filter riwayat pakai kata kunci (cocokkan tanggal / isi jurnal).
+  const cariEl = document.getElementById("history-cari");
+  const kunci = cariEl ? cariEl.value.trim().toLowerCase() : "";
+
+  let daftar = state.history.slice().reverse();
+  if (kunci) {
+    daftar = daftar.filter(h =>
+      (h.date || "").toLowerCase().includes(kunci) ||
+      (h.jurnal || "").toLowerCase().includes(kunci)
+    );
+  }
+  if (daftar.length === 0) {
+    box.innerHTML = `<div class="history-empty">Gak ada riwayat yang cocok "${escapeHtml(kunci)}".</div>`;
+    return;
+  }
+
+  daftar.forEach(hari => {
     const row = document.createElement("div");
     row.className = "history-row";
     // Kalau hari itu ada catatan jurnal, tampilkan di bawah tanggal.
@@ -1717,6 +1809,21 @@ function editMisiNote(id) {
   const teks = baru.trim();
   if (teks) state.misiNote[id] = teks.slice(0, 60);
   else delete state.misiNote[id];
+}
+
+// Tahap 46: set jam pengingat per-misi ("HH:MM"), atau kosongkan buat hapus.
+function editMisiJam(id) {
+  const m = misiAktif().find(x => x.id === id);
+  if (!m) return;
+  const baru = prompt("Jam pengingat misi ini (format 24 jam, mis. 07:30). Kosongkan untuk hapus:", m.jam || "");
+  if (baru === null) return;
+  const teks = baru.trim();
+  if (teks === "") { delete m.jam; }
+  else if (/^\d{2}:\d{2}$/.test(teks)) { m.jam = teks; }
+  else { toastInfo("Format jam salah. Pakai HH:MM, mis. 07:30."); return; }
+  save();
+  render();
+  toastInfo(m.jam ? ("⏰ Pengingat misi di " + m.jam) : "Pengingat misi dihapus.");
   save();
   render();
 }
@@ -1733,7 +1840,13 @@ function tambahGoal(nama, target) {
 function ubahGoal(id, delta) {
   const g = state.goals.find(x => x.id === id);
   if (!g) return;
+  const sebelum = g.nilai;
   g.nilai = Math.max(0, Math.min(g.target, g.nilai + delta));
+  // Tahap 45: rayakan pas goal BARU tercapai (nyentuh target dari bawah).
+  if (sebelum < g.target && g.nilai >= g.target) {
+    if (typeof efekLevelUp === "function") efekLevelUp(); // bunyi + getar
+    toastInfo("🎯 Target \"" + g.nama + "\" tercapai! Mantap! 🎉");
+  }
   save(); render();
 }
 function hapusGoal(id) {
@@ -1792,6 +1905,145 @@ function setupMode() {
     save(); applyMode();
     toastInfo(state.mode === "terang" ? "☀️ Mode terang" : "🌙 Mode gelap");
   });
+}
+
+
+// ---------------------------------------------------------------------
+//  BLOK F — Tahap 47-51
+// ---------------------------------------------------------------------
+
+// Tahap 47: MULAI BABAK BARU — arsipkan progres sekarang, lalu reset
+// level/exp/stat/misi-centang, TAPI arsip & daftar misi disimpan.
+function mulaiBabakBaru() {
+  const ok1 = confirm("Mulai babak baru? Progres sekarang (level, EXP, stat, streak) akan di-RESET.\n\nRiwayat disimpan ke arsip, dan daftar misi kamu tetap. Lanjut?");
+  if (!ok1) return;
+  const ok2 = confirm("Yakin? Ini gak bisa di-undo dari dalam app.\n\nSaran: Export backup dulu sebelum lanjut. Tetap mulai babak baru sekarang?");
+  if (!ok2) return;
+
+  // Arsipkan ringkasan babak ini.
+  state.arsip.push({
+    tanggal: today(),
+    level: state.level,
+    totalDone: state.totalDone || 0,
+    hari: dayNumber(),
+    expTotal: expTerkumpul(),
+  });
+
+  // Reset progres (TAPI simpan: arsip, missions, kategori, profil, tema, setting).
+  state.exp = 0;
+  state.level = 1;
+  state.done = [];
+  state.stats = { body: 50, mind: 50, looks: 50, discipline: 50 };
+  state.streak = 0;
+  state.history = [];
+  state.unlocked = [];
+  state.totalDone = 0;
+  state.startDate = today();
+  state.date = today();
+  state.skills = [];
+  state.weekly = { minggu: "", progress: {}, selesai: [] };
+  state.goals = [];
+  state.mood = {};
+  save();
+  render();
+  toastInfo("🌅 Babak baru dimulai! Semangat lagi dari Day 1.");
+}
+
+function renderArsip() {
+  const box = document.getElementById("arsip-list");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!state.arsip || state.arsip.length === 0) {
+    box.innerHTML = `<div class="history-empty">Belum ada babak lama yang diarsipkan.</div>`;
+    return;
+  }
+  state.arsip.slice().reverse().forEach((a, i) => {
+    const row = document.createElement("div");
+    row.className = "history-row";
+    row.innerHTML = `
+      <div class="history-top">
+        <span class="history-date">Babak ${state.arsip.length - i} · ${a.tanggal}</span>
+        <span class="history-count">Lv.${a.level}</span>
+      </div>
+      <div class="history-note">🏁 ${a.hari} hari · ${a.totalDone} misi · ${a.expTotal} EXP</div>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function setupBabakBaru() {
+  const btn = document.getElementById("babak-baru-btn");
+  if (btn) btn.addEventListener("click", mulaiBabakBaru);
+}
+
+// Tahap 48: render daftar profil + tombol ganti/hapus.
+function renderProfilSlot() {
+  const box = document.getElementById("profil-slot-list");
+  if (!box) return;
+  const meta = bacaMetaProfil();
+  box.innerHTML = "";
+  meta.list.forEach(p => {
+    const aktif = p.key === meta.aktif;
+    const row = document.createElement("div");
+    row.className = "slot-row" + (aktif ? " aktif" : "");
+    row.innerHTML = `
+      <span class="slot-nama">${escapeHtml(p.nama)}${aktif ? " ✓" : ""}</span>
+      <span class="slot-aksi"></span>
+    `;
+    const aksi = row.querySelector(".slot-aksi");
+    if (!aktif) {
+      const bGanti = document.createElement("button");
+      bGanti.className = "slot-btn"; bGanti.textContent = "Pakai";
+      bGanti.addEventListener("click", () => gantiProfil(p.key));
+      aksi.appendChild(bGanti);
+    }
+    if (p.key !== "ascend") {
+      const bHapus = document.createElement("button");
+      bHapus.className = "slot-btn hapus"; bHapus.textContent = "✕";
+      bHapus.title = "Hapus profil";
+      bHapus.addEventListener("click", () => hapusProfil(p.key));
+      aksi.appendChild(bHapus);
+    }
+    box.appendChild(row);
+  });
+}
+
+// Tahap 49: KALENDER KONTRIBUSI — grid kotak 7x~, makin banyak misi makin
+// terang (kayak GitHub). Dari state.history (+ hari ini). Tampil di tab Info.
+function renderKalender() {
+  const box = document.getElementById("kalender-grid");
+  if (!box) return;
+  // Peta tanggal -> misi kelar.
+  const peta = {};
+  state.history.forEach(h => { peta[h.date] = h.kelar || 0; });
+  peta[today()] = state.done.length;
+
+  box.innerHTML = "";
+  const JUM_HARI = 91; // ~3 bulan terakhir biar muat di layar HP
+  for (let i = JUM_HARI - 1; i >= 0; i--) {
+    const tgl = tanggalMundur(i);
+    const kelar = peta[tgl] || 0;
+    // Tingkat warna 0-4 berdasar jumlah misi.
+    let lv = 0;
+    if (kelar >= 1) lv = 1;
+    if (kelar >= 3) lv = 2;
+    if (kelar >= 6) lv = 3;
+    if (kelar >= 10) lv = 4;
+    const sel = document.createElement("div");
+    sel.className = "kal-sel kal-lv" + lv;
+    sel.title = tgl + ": " + kelar + " misi";
+    box.appendChild(sel);
+  }
+}
+
+function setupProfilSlot() {
+  const btn = document.getElementById("slot-add-btn");
+  const inp = document.getElementById("slot-nama");
+  if (btn && inp) {
+    btn.addEventListener("click", () => { tambahProfil(inp.value); inp.value = ""; });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") btn.click(); });
+  }
+  renderProfilSlot();
 }
 
 
@@ -1881,6 +2133,74 @@ function shareKartu() {
 function setupShare() {
   const btn = document.getElementById("share-btn");
   if (btn) btn.addEventListener("click", shareKartu);
+  const btnW = document.getElementById("weekly-export-btn");
+  if (btnW) btnW.addEventListener("click", exportMingguan);
+}
+
+// Tahap 44: EKSPOR RINGKASAN MINGGUAN ke gambar PNG (canvas, tanpa library).
+// Ringkas 7 hari terakhir: misi/hari + mood + total. Download sebagai PNG.
+function exportMingguan() {
+  const W = 700, H = 460;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (!ctx) { toastInfo("Browser gak dukung canvas."); return; }
+
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#17204a"); g.addColorStop(1, "#0b0e18");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#4d6bff";
+  ctx.font = "800 34px 'Segoe UI', sans-serif";
+  ctx.fillText("Ringkasan Mingguan", 40, 58);
+  ctx.fillStyle = "#8a97c2";
+  ctx.font = "500 18px 'Segoe UI', sans-serif";
+  ctx.fillText(state.profil.nama + " · Day " + dayNumber() + " / 66", 40, 86);
+
+  // 7 kolom hari: tinggi bar = misi kelar hari itu, emoji mood di bawah.
+  const histMap = {};
+  state.history.forEach(h => { histMap[h.date] = h.kelar || 0; });
+  const maxBar = Math.max(1, ...Object.values(histMap), state.done.length);
+  const x0 = 40, lebar = (W - 80) / 7, baseY = 340, maxH = 180;
+  for (let i = 6; i >= 0; i--) {
+    const idx = 6 - i;
+    const tgl = tanggalMundur(i);
+    const kelar = (i === 0) ? state.done.length : (histMap[tgl] || 0);
+    const tinggi = (kelar / maxBar) * maxH;
+    const x = x0 + idx * lebar;
+    // Bar.
+    ctx.fillStyle = "#1f47e8";
+    ctx.fillRect(x + lebar * 0.2, baseY - tinggi, lebar * 0.6, tinggi);
+    // Angka misi.
+    ctx.fillStyle = "#e8eaf4";
+    ctx.font = "700 16px 'Segoe UI', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(kelar), x + lebar / 2, baseY - tinggi - 8);
+    // Mood emoji.
+    const mood = state.mood[tgl] || "·";
+    ctx.font = "22px sans-serif";
+    ctx.fillText(mood, x + lebar / 2, baseY + 30);
+    // Label hari.
+    ctx.fillStyle = "#8a97c2";
+    ctx.font = "500 13px 'Segoe UI', sans-serif";
+    ctx.fillText(HARI_SINGKAT[new Date(tgl).getDay()], x + lebar / 2, baseY + 54);
+  }
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#7fd0ff";
+  ctx.font = "600 16px 'Segoe UI', sans-serif";
+  ctx.fillText("🔥 Streak " + state.streak + "   ·   💎 " + state.poin + "   ·   Lv." + state.level, 40, 420);
+
+  c.toBlob(blob => {
+    if (!blob) { toastInfo("Gagal bikin gambar."); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "ascend-minggu-" + today() + ".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toastInfo("📊 Ringkasan mingguan kedownload!");
+  }, "image/png");
 }
 
 
@@ -1992,6 +2312,34 @@ function renderMood() {
 }
 
 
+// Tahap 42: RIWAYAT MOOD — baris emoji 7 hari terakhir (tab Info).
+// Hari tanpa mood ditandai titik. Dibaca dari state.mood (keyed tanggal).
+function tanggalMundur(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+const HARI_SINGKAT = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+function renderMoodHistory() {
+  const box = document.getElementById("mood-history");
+  if (!box) return;
+  box.innerHTML = "";
+  // 7 hari: dari 6 hari lalu sampai hari ini.
+  for (let i = 6; i >= 0; i--) {
+    const tgl = tanggalMundur(i);
+    const emoji = state.mood[tgl] || "·";
+    const dow = HARI_SINGKAT[new Date(tgl).getDay()];
+    const kolom = document.createElement("div");
+    kolom.className = "moodh-kolom" + (i === 0 ? " hari-ini" : "");
+    kolom.innerHTML = `
+      <div class="moodh-emoji">${emoji}</div>
+      <div class="moodh-hari">${dow}</div>
+    `;
+    box.appendChild(kolom);
+  }
+}
+
+
 // Tahap 26: KUTIPAN HARIAN — 1 kutipan, dipilih dari tanggal (tetap sepanjang hari).
 const KUTIPAN = [
   "Sedikit tiap hari, lama-lama jadi banyak.",
@@ -2018,6 +2366,33 @@ function renderKutipan() {
   const el = document.getElementById("kutipan-hari");
   if (!el) return;
   el.textContent = "\u201C" + kutipanHariIni() + "\u201D";
+}
+
+
+// Tahap 50: TIPS PINTAR — saran berdasar pola data (bukan acak).
+// Aturan sederhana & transparan: cek kondisi, kasih saran yang paling relevan.
+function tipHariIni() {
+  // 1) Streak putus / rendah -> dorong konsistensi.
+  if (state.streak === 0) return "🔥 Streak kamu 0. Kelarin 1 misi aja hari ini buat mulai lagi.";
+  // 2) Stat paling rendah -> saran fokus.
+  const statArr = [
+    { k: "body", label: "fisik" }, { k: "mind", label: "mental" },
+    { k: "looks", label: "perawatan" }, { k: "discipline", label: "disiplin" },
+  ];
+  let minStat = statArr[0], minVal = state.stats[statArr[0].k];
+  statArr.forEach(s => { if (state.stats[s.k] < minVal) { minVal = state.stats[s.k]; minStat = s; } });
+  if (minVal < 55) return `📊 Stat ${minStat.label} kamu paling rendah (${minVal}). Coba fokus misi ${minStat.label} hari ini.`;
+  // 3) Gizi protein kurang dari separuh target -> saran gizi.
+  if (state.gizi.protein < state.giziTarget.protein / 2) return "🍗 Protein hari ini masih kurang. Jangan lupa makan cukup protein.";
+  // 4) Belum nulis jurnal -> dorong refleksi.
+  if (!state.jurnal || state.jurnal.trim() === "") return "📓 Belum nulis jurnal hari ini. Luangin 1 menit buat refleksi.";
+  // 5) Semua oke -> apresiasi.
+  return "✨ Pola kamu bagus. Pertahankan ritmenya!";
+}
+function renderTip() {
+  const el = document.getElementById("tip-hari");
+  if (!el) return;
+  el.textContent = "💡 " + tipHariIni();
 }
 
 
@@ -2303,7 +2678,7 @@ function cekReminder() {
   const jamNow = String(now.getHours()).padStart(2, "0") + ":" +
                  String(now.getMinutes()).padStart(2, "0");
 
-  if (jamNow === state.reminderJam && state.reminderTanggal !== today()) {
+  if (state.reminderOn && jamNow === state.reminderJam && state.reminderTanggal !== today()) {
     state.reminderTanggal = today(); // tandai sudah bunyi hari ini
     save();
     const sisa = misiHariIni().length - state.done.length;
@@ -2313,6 +2688,19 @@ function cekReminder() {
       bunyikanReminder("Semua misi kelar hari ini. Mantap! 🔥");
     }
   }
+
+  // Tahap 46: pengingat PER-MISI. Misi punya field 'jam' ("HH:MM").
+  // Bunyi sekali per misi per hari, cuma kalau misi belum kelar.
+  if (!state.misiReminderTanggal) state.misiReminderTanggal = {};
+  misiHariIni().forEach(m => {
+    if (!m.jam) return;
+    if (jamNow !== m.jam) return;
+    if (state.misiReminderTanggal[m.id] === today()) return; // sudah bunyi hari ini
+    if (state.done.includes(m.id)) return; // udah kelar, gak usah ingetin
+    state.misiReminderTanggal[m.id] = today();
+    save();
+    bunyikanReminder("Waktunya: " + m.name);
+  });
 }
 
 // Gambar setting reminder (toggle + input jam) di tab Lainnya.
@@ -2409,4 +2797,19 @@ setupJadwal();       // Tahap 28: tombol hari di form misi
 setupGoals();        // Tahap 29: form target jangka panjang
 setupMode();         // Tahap 31: toggle mode gelap/terang
 setupShare();        // Tahap 35: tombol share kartu progres
+setupCariRiwayat();  // Tahap 43: kotak cari di riwayat
+setupBabakBaru();    // Tahap 47: tombol mulai babak baru
+setupProfilSlot();   // Tahap 48: daftar & tambah profil
 render();
+
+// Tahap 43: ketik di kotak cari -> gambar ulang riwayat (terfilter).
+function setupCariRiwayat() {
+  const inp = document.getElementById("history-cari");
+  if (inp) inp.addEventListener("input", renderHistory);
+}
+
+// Tahap 39: sembunyikan splash begitu render pertama selesai (anti-kedip).
+(function sembunyikanSplash() {
+  const sp = document.getElementById("splash");
+  if (sp) setTimeout(() => sp.classList.add("hide"), 250);
+})();
