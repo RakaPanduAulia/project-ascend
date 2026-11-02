@@ -28,6 +28,13 @@ Tema warna: Sung Jin-Woo (Solo Leveling) — gelap + biru elektrik.
 - **Tahap 20:** Suara & getar — bunyi kecil (Web Audio API, nada dibuat dari kode, tanpa file) + getar HP (`navigator.vibrate`) pas misi kelar / naik level. Toggle on/off di tab Lainnya (`state.suaraOn`). Aman kalau browser gak dukung (diguard).
 - **Tahap 21:** PWA (install di HP) — `manifest.json` + `sw.js` (service worker, cache-first) + `icon.svg`. App bisa di-"install" ke layar HP & jalan offline. Registrasi SW diguard (gagal → app tetap jalan). Butuh diakses via HTTPS (GitHub Pages), bukan `file://`.
 
+### Blok A (Tahap 22-26)
+- **Tahap 22:** Onboarding — layar sambutan sekali di awal (nama + avatar), flag `state.sudahOnboard`.
+- **Tahap 23:** Statistik mendalam — tab Info: total misi, hari tercatat, rata/hari, EXP total, hari paling produktif.
+- **Tahap 24:** Tema warna — biru/ungu/hijau/merah, override `--accent`/`--accent-2` + latar; terpisah dari tema emas item. `state.tema`.
+- **Tahap 25:** Mood harian — catat 1 dari 5 emoji per tanggal (`state.mood`), tampil di Home.
+- **Tahap 26:** Kutipan motivasi — 1 kutipan/hari, dipilih deterministik dari tanggal (tetap sepanjang hari).
+
 ## Opsional lanjut
 - AI API untuk generate/nilai misi otomatis. Butuh backend + API key berbayar — ditunda sampai app siap online/PWA.
 
