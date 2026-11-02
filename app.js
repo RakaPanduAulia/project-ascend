@@ -1634,27 +1634,10 @@ function setupNav() {
 
 // ---------------------------------------------------------------------
 //  9) START
-// ---------------------------------------------------------------------
-load();
-applyTheme();        // pasang tema (emas kalau sudah dibeli)
-claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
-setupNav();          // aktifkan navigasi tab bawah
-setupJurnal();       // sambungkan textarea jurnal
-setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
-setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
-setupBackup();       // sambungkan tombol export/import data
-setupProfil();       // sambungkan strip profil + modal edit
-setupSuara();        // sambungkan toggle suara & getar
-setupTema();         // Tahap 24: pilihan tema warna
-setupMood();         // Tahap 25: tombol mood harian
-setupOnboard();      // Tahap 22: layar sambutan (muncul sekali)
-setupKategori();     // Tahap 27: form tambah kategori
-setupJadwal();       // Tahap 28: tombol hari di form misi
-setupGoals();        // Tahap 29: form target jangka panjang
-setupMode();         // Tahap 31: toggle mode gelap/terang
-applyMode();         // pasang mode gelap/terang pas load
-setupShare();        // Tahap 35: tombol share kartu progres
-render();
+// CATATAN: blok START (load + semua setup + render) DIPINDAH ke paling bawah
+// file. Dulu di sini, tapi manggil const/fungsi (mis. TEMA_PILIHAN) yang
+// didefinisikan SETELAH titik ini -> error "Cannot access before init" pas
+// data kosong. Taruh di akhir biar semua udah siap sebelum dijalankan.
 
 
 // ---------------------------------------------------------------------
@@ -2400,3 +2383,30 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+
+// =====================================================================
+//  START — DIJALANKAN PALING AKHIR
+//  Semua const & fungsi di atas sudah terdefinisi di titik ini, jadi aman
+//  memanggil setup yang butuh TEMA_PILIHAN, MOODS, dll.
+// =====================================================================
+load();
+applyTheme();        // pasang tema (emas kalau sudah dibeli)
+applyMode();         // Tahap 31: pasang mode gelap/terang
+claimDailyLogin();   // kasih bonus Poin kalau login pertama hari ini
+setupNav();          // aktifkan navigasi tab bawah
+setupJurnal();       // sambungkan textarea jurnal
+setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
+setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
+setupBackup();       // sambungkan tombol export/import data
+setupProfil();       // sambungkan strip profil + modal edit
+setupSuara();        // sambungkan toggle suara & getar
+setupTema();         // Tahap 24: pilihan tema warna
+setupMood();         // Tahap 25: tombol mood harian
+setupOnboard();      // Tahap 22: layar sambutan (muncul sekali)
+setupKategori();     // Tahap 27: form tambah kategori
+setupJadwal();       // Tahap 28: tombol hari di form misi
+setupGoals();        // Tahap 29: form target jangka panjang
+setupMode();         // Tahap 31: toggle mode gelap/terang
+setupShare();        // Tahap 35: tombol share kartu progres
+render();
