@@ -5,7 +5,7 @@
 //    2. Browser nganggap ini "app beneran" -> muncul opsi "Install".
 //  Naikkan VERSI tiap ada update file, biar cache lama dibuang.
 // =====================================================================
-const VERSI = "ascend-v1";
+const VERSI = "ascend-v2";
 const FILES = [
   "./",
   "./index.html",
