@@ -1,12 +1,17 @@
-/* ===== Tema dasar: gelap + biru elektrik (Sung Jin-Woo / Solo Leveling) ===== */
+﻿/* ===== Tema dasar: gelap + biru elektrik (Sung Jin-Woo / Solo Leveling) ===== */
 :root {
   --bg:        #121217;
   --card:      #0f1733;
   --card-2:    #0b1a4d;
+  --card-hi:   #15204a;  /* kartu highlight (skill/jurnal aktif) */
+  --surface-2: #16233f;  /* tombol sekunder / input gelap */
   --border:    #1a3a8a;
   --accent:    #1f47e8;
   --accent-2:  #4d6bff;
+  --accent-3:  #6f8cff;  /* judul lapisan / aksen lembut */
+  --sky:       #7fd0ff;  /* teks biru muda (gelar, highlight) */
   --text:      #e8eaf4;
+  --text-2:    #cdd6f4;  /* teks tombol sekunder */
   --muted:     #8a97c2;
   --radius:    14px;
 }
@@ -77,8 +82,8 @@ body {
 }
 
 .streak-chip {
-  background: #0b1a4d;
-  border: 1px solid #1a3a8a;
+  background: var(--card-2);
+  border: 1px solid var(--border);
   color: #ff7a3a;
   font-weight: 700;
   font-size: 14px;
@@ -102,7 +107,7 @@ body {
   font-size: 34px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #1f47e8;
+  color: var(--accent);
   text-shadow: 0 0 18px rgba(31, 71, 232, 0.5);
 }
 
@@ -116,7 +121,7 @@ body {
 
 .exp-track {
   height: 14px;
-  background: #0b1a4d;
+  background: var(--card-2);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -124,7 +129,7 @@ body {
 .exp-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #0a2bc2, #1f47e8);
+  background: linear-gradient(90deg, #0a2bc2, var(--accent));
   border-radius: 8px;
   box-shadow: 0 0 12px rgba(31, 71, 232, 0.6);
   transition: width 0.4s ease;
@@ -148,7 +153,7 @@ body {
 
 .stat-track {
   height: 9px;
-  background: #0b1a4d;
+  background: var(--card-2);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -179,21 +184,21 @@ body {
   align-items: center;
   gap: 12px;
   padding: 14px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;
 }
 
 .mission:hover {
-  background: #15204a;
+  background: var(--card-hi);
 }
 
 .mission .check {
   width: 22px;
   height: 22px;
-  border: 2px solid #1a3a8a;
+  border: 2px solid var(--border);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -209,7 +214,7 @@ body {
 
 .mission .exp {
   font-size: 12px;
-  color: #4d6bff;
+  color: var(--accent-2);
   opacity: 0.9;
 }
 
@@ -223,8 +228,8 @@ body {
 }
 
 .mission.done .check {
-  background: #1f47e8;
-  border-color: #1f47e8;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
@@ -251,8 +256,8 @@ body {
   flex-direction: column;
   gap: 6px;
   padding: 11px 14px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 14px;
 }
@@ -276,7 +281,7 @@ body {
 }
 
 .history-count {
-  color: #4d6bff;
+  color: var(--accent-2);
   font-weight: 600;
 }
 
@@ -288,7 +293,7 @@ body {
 }
 
 /* ===================================================================== */
-/*  TAHAP 4 — Poles tampilan & animasi                                   */
+/*  TAHAP 4 â€” Poles tampilan & animasi                                   */
 /* ===================================================================== */
 
 /* Efek "pop" pas misi dicentang */
@@ -299,7 +304,7 @@ body {
 }
 .mission.just-checked {
   animation: pop 0.3s ease;
-  border-color: #1f47e8;
+  border-color: var(--accent);
   box-shadow: 0 0 14px rgba(31, 71, 232, 0.4);
 }
 
@@ -365,13 +370,13 @@ body {
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #ffffff;
-  text-shadow: 0 0 10px #1f47e8, 0 0 30px #1f47e8, 0 0 60px rgba(31,71,232,0.8);
+  text-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent), 0 0 60px rgba(31,71,232,0.8);
 }
 .levelup-card .sub {
   margin-top: 6px;
   font-size: 22px;
   font-weight: 700;
-  color: #4d6bff;
+  color: var(--accent-2);
   letter-spacing: 0.1em;
 }
 
@@ -386,8 +391,8 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #4d6bff;
-  box-shadow: 0 0 10px #1f47e8;
+  background: var(--accent-2);
+  box-shadow: 0 0 10px var(--accent);
   opacity: 0;
 }
 .levelup-overlay.show .burst .spark {
@@ -438,7 +443,7 @@ body {
 }
 .ach-count {
   font-size: 13px;
-  color: #4d6bff;
+  color: var(--accent-2);
   font-weight: 600;
 }
 .achievement-grid {
@@ -455,7 +460,7 @@ body {
   justify-content: center;
   gap: 4px;
   background: #0d1428;
-  border: 1px solid #16233f;
+  border: 1px solid var(--surface-2);
   border-radius: 12px;
   text-align: center;
   padding: 6px;
@@ -470,8 +475,8 @@ body {
   line-height: 1.1;
 }
 .badge.unlocked {
-  background: linear-gradient(135deg, #0f1733, #15204a);
-  border-color: #1f47e8;
+  background: linear-gradient(135deg, var(--card), var(--card-hi));
+  border-color: var(--accent);
   box-shadow: 0 0 12px rgba(31, 71, 232, 0.35);
 }
 .badge.unlocked .badge-icon {
@@ -488,10 +493,10 @@ body {
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%) translateY(20px);
-  background: #0f1733;
-  border: 1px solid #1f47e8;
+  background: var(--card);
+  border: 1px solid var(--accent);
   box-shadow: 0 0 20px rgba(31, 71, 232, 0.5);
-  color: #e8eaf4;
+  color: var(--text);
   padding: 12px 18px;
   border-radius: 12px;
   font-size: 14px;
@@ -516,7 +521,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #6f8cff;
+  color: var(--accent-3);
   opacity: 0.8;
   margin: 14px 0 2px;
   padding-left: 2px;
@@ -535,9 +540,9 @@ body {
   align-items: center;
 }
 .poin-chip {
-  background: #0b1a4d;
-  border: 1px solid #1a3a8a;
-  color: #7fd0ff;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--sky);
   font-weight: 700;
   font-size: 14px;
   padding: 4px 12px;
@@ -556,8 +561,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 .shop-icon {
@@ -575,9 +580,9 @@ body {
 }
 .shop-stok {
   font-size: 11px;
-  color: #7fd0ff;
-  background: #0b1a4d;
-  border: 1px solid #1a3a8a;
+  color: var(--sky);
+  background: var(--card-2);
+  border: 1px solid var(--border);
   padding: 1px 7px;
   border-radius: 10px;
   margin-left: 4px;
@@ -589,7 +594,7 @@ body {
 }
 .buy {
   flex-shrink: 0;
-  background: #1f47e8;
+  background: var(--accent);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -611,12 +616,12 @@ body {
   cursor: not-allowed;
 }
 .buy.owned {
-  background: #0b1a4d;
+  background: var(--card-2);
   color: #9fb2ff;
-  border: 1px solid #1a3a8a;
+  border: 1px solid var(--border);
 }
 
-/* ===== Tema Emas (item kosmetik) — ganti aksen biru jadi emas ===== */
+/* ===== Tema Emas (item kosmetik) â€” ganti aksen biru jadi emas ===== */
 body.theme-gold .brand,
 body.theme-gold .day-counter {
   color: #f5c518;
@@ -654,17 +659,17 @@ body.theme-gold .badge.unlocked {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 .skill-item.locked {
   opacity: 0.55;
 }
 .skill-item.learned {
-  border-color: #1f47e8;
+  border-color: var(--accent);
   box-shadow: 0 0 12px rgba(31, 71, 232, 0.3);
-  background: linear-gradient(135deg, #0f1733, #15204a);
+  background: linear-gradient(135deg, var(--card), var(--card-hi));
 }
 .skill-icon {
   font-size: 26px;
@@ -686,7 +691,7 @@ body.theme-gold .badge.unlocked {
 }
 .learn {
   flex-shrink: 0;
-  background: #1f47e8;
+  background: var(--accent);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -709,13 +714,13 @@ body.theme-gold .badge.unlocked {
 }
 .skill-status {
   flex-shrink: 0;
-  color: #4d6bff;
+  color: var(--accent-2);
   font-weight: 700;
   font-size: 13px;
 }
 .skill-req {
   flex-shrink: 0;
-  color: #8a97c2;
+  color: var(--muted);
   font-size: 11px;
   text-align: right;
   max-width: 110px;
@@ -741,8 +746,8 @@ body.theme-gold .learn {
   margin-top: 12px;
 }
 .gizi-row {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
 }
@@ -758,18 +763,18 @@ body.theme-gold .learn {
 }
 .gizi-track {
   height: 9px;
-  background: #0b1a4d;
+  background: var(--card-2);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 10px;
 }
 .gizi-fill {
   height: 100%;
-  background: #4d6bff;
+  background: var(--accent-2);
   transition: width 0.3s ease;
 }
 .gizi-fill.done {
-  background: linear-gradient(90deg, #1f47e8, #7fd0ff);
+  background: linear-gradient(90deg, var(--accent), var(--sky));
 }
 .gizi-btns {
   display: flex;
@@ -777,9 +782,9 @@ body.theme-gold .learn {
 }
 .gizi-btn {
   flex: 1;
-  background: #16233f;
-  color: #cdd6f4;
-  border: 1px solid #1a3a8a;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
   font-weight: 700;
   font-size: 13px;
   padding: 7px 0;
@@ -831,7 +836,7 @@ body {
   font-size: 13px;
 }
 
-/* Nav bar bawah — nempel di bawah layar */
+/* Nav bar bawah â€” nempel di bawah layar */
 .navbar {
   position: fixed;
   left: 50%;
@@ -899,7 +904,7 @@ body {
   height: 140px;
   display: block;
   background: #0b1430;
-  border: 1px solid #1a3a8a;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 4px;
   box-sizing: border-box;
@@ -909,22 +914,22 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
-  color: #8a97c2;
+  color: var(--muted);
   margin-top: 8px;
   padding: 0 2px;
 }
 .chart-max {
-  color: #7fd0ff;
+  color: var(--sky);
   font-weight: 700;
 }
 .chart-empty {
-  background: #0f1733;
-  border: 1px dashed #1a3a8a;
+  background: var(--card);
+  border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 20px 16px;
   text-align: center;
   font-size: 13px;
-  color: #8a97c2;
+  color: var(--muted);
   line-height: 1.5;
 }
 body.theme-gold .chart-svg {
@@ -938,17 +943,17 @@ body.theme-gold .chart-max {
 /* ===== Tahap 13: Jurnal Harian ===== */
 .jurnal-hint {
   font-size: 12px;
-  color: #8a97c2;
+  color: var(--muted);
   margin: 2px 0 10px;
   line-height: 1.4;
 }
 .jurnal-input {
   width: 100%;
   box-sizing: border-box;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  color: #e8eaf4;
+  color: var(--text);
   font-family: inherit;
   font-size: 14px;
   line-height: 1.5;
@@ -962,7 +967,7 @@ body.theme-gold .chart-max {
 }
 .jurnal-input:focus {
   outline: none;
-  border-color: #1f47e8;
+  border-color: var(--accent);
   box-shadow: 0 0 12px rgba(31, 71, 232, 0.35);
 }
 body.theme-gold .jurnal-input:focus {
@@ -979,13 +984,13 @@ body.theme-gold .jurnal-input:focus {
   margin-top: 4px;
 }
 .weekly-item {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
 }
 .weekly-item.selesai {
-  border-color: #1f47e8;
+  border-color: var(--accent);
   box-shadow: 0 0 12px rgba(31, 71, 232, 0.3);
 }
 .weekly-head {
@@ -1001,34 +1006,34 @@ body.theme-gold .jurnal-input:focus {
 }
 .weekly-reward {
   font-size: 11px;
-  color: #7fd0ff;
+  color: var(--sky);
   font-weight: 700;
   flex-shrink: 0;
 }
 .weekly-desc {
   font-size: 12px;
-  color: #8a97c2;
+  color: var(--muted);
   margin-bottom: 9px;
   line-height: 1.4;
 }
 .weekly-track {
   height: 9px;
-  background: #0b1a4d;
+  background: var(--card-2);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 5px;
 }
 .weekly-fill {
   height: 100%;
-  background: #4d6bff;
+  background: var(--accent-2);
   transition: width 0.3s ease;
 }
 .weekly-fill.done {
-  background: linear-gradient(90deg, #1f47e8, #7fd0ff);
+  background: linear-gradient(90deg, var(--accent), var(--sky));
 }
 .weekly-num {
   font-size: 11px;
-  color: #8a97c2;
+  color: var(--muted);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -1054,8 +1059,8 @@ body.theme-gold .weekly-fill.done {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 10px;
 }
@@ -1069,13 +1074,13 @@ body.theme-gold .weekly-fill.done {
 }
 .reminder-sub {
   font-size: 12px;
-  color: #8a97c2;
+  color: var(--muted);
   line-height: 1.4;
 }
 .reminder-time {
-  background: #0b1a4d;
-  border: 1px solid #1a3a8a;
-  color: #e8eaf4;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-family: inherit;
   font-size: 14px;
   padding: 7px 10px;
@@ -1100,7 +1105,7 @@ body.theme-gold .weekly-fill.done {
   position: absolute;
   inset: 0;
   background: #1a2240;
-  border: 1px solid #1a3a8a;
+  border: 1px solid var(--border);
   border-radius: 26px;
   cursor: pointer;
   transition: background 0.2s;
@@ -1112,13 +1117,13 @@ body.theme-gold .weekly-fill.done {
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background: #8a97c2;
+  background: var(--muted);
   border-radius: 50%;
   transition: transform 0.2s, background 0.2s;
 }
 .switch input:checked + .slider {
-  background: #1f47e8;
-  border-color: #1f47e8;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .switch input:checked + .slider::before {
   transform: translateX(20px);
@@ -1137,29 +1142,29 @@ body.theme-gold .switch input:checked + .slider {
 
 
 /* ===================================================================== */
-/*  TAHAP 16 — Atur Misi Sendiri (editor di halaman Home)                */
+/*  TAHAP 16 â€” Atur Misi Sendiri (editor di halaman Home)                */
 /* ===================================================================== */
 .misi-editor > summary {
   cursor: pointer;
   font-weight: 700;
   font-size: 15px;
-  color: var(--accent, #4d6bff);
+  color: var(--accent, var(--accent-2));
   list-style: none;
   padding: 2px 0;
   user-select: none;
 }
 .misi-editor > summary::-webkit-details-marker { display: none; }
-.misi-editor > summary::before { content: "▸ "; }
-.misi-editor[open] > summary::before { content: "▾ "; }
+.misi-editor > summary::before { content: "â–¸ "; }
+.misi-editor[open] > summary::before { content: "â–¾ "; }
 
 /* Form tambah misi */
 .misi-form { margin: 10px 0 14px; display: flex; flex-direction: column; gap: 8px; }
 .misi-input,
 .misi-select,
 .misi-exp-input {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
-  color: #e8eaf4;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-size: 14px;
   padding: 9px 11px;
   border-radius: 10px;
@@ -1176,7 +1181,7 @@ body.theme-gold .switch input:checked + .slider {
 .misi-form-row > .misi-exp-input { flex: 0 0 72px; }
 .misi-form-row > .misi-add-btn { flex: 0 0 auto; }
 .misi-add-btn {
-  background: #1f47e8;
+  background: var(--accent);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -1195,12 +1200,12 @@ body.theme-gold .switch input:checked + .slider {
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 .misi-edit-name { flex: 1; font-size: 13px; }
-.misi-edit-exp { font-size: 12px; color: #4d6bff; font-weight: 700; }
+.misi-edit-exp { font-size: 12px; color: var(--accent-2); font-weight: 700; }
 .misi-del {
   background: transparent;
   border: 1px solid #5a2030;
@@ -1219,9 +1224,9 @@ body.theme-gold .switch input:checked + .slider {
 .misi-reset-btn {
   margin-top: 14px;
   width: 100%;
-  background: #16233f;
-  color: #cdd6f4;
-  border: 1px solid #1a3a8a;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
   font-weight: 700;
   font-size: 13px;
   padding: 10px 0;
@@ -1236,7 +1241,7 @@ body.theme-gold .misi-add-btn:hover { background: #cf9c1a; }
 
 
 /* ===================================================================== */
-/*  TAHAP 18 — Backup & Restore data                                     */
+/*  TAHAP 18 â€” Backup & Restore data                                     */
 /* ===================================================================== */
 .backup-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .backup-btn {
@@ -1249,12 +1254,12 @@ body.theme-gold .misi-add-btn:hover { background: #cf9c1a; }
   cursor: pointer;
   font-family: inherit;
 }
-.backup-btn.export { background: #1f47e8; color: #fff; }
+.backup-btn.export { background: var(--accent); color: #fff; }
 .backup-btn.export:hover { background: #2a52f0; }
 .backup-btn.import {
-  background: #16233f;
-  color: #cdd6f4;
-  border: 1px solid #1a3a8a;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
 }
 .backup-btn.import:hover { background: #1b2d52; }
 
@@ -1263,7 +1268,7 @@ body.theme-gold .backup-btn.export:hover { background: #cf9c1a; }
 
 
 /* ===================================================================== */
-/*  TAHAP 17 — Profil & avatar                                           */
+/*  TAHAP 17 â€” Profil & avatar                                           */
 /* ===================================================================== */
 .profil-strip {
   display: flex;
@@ -1273,12 +1278,12 @@ body.theme-gold .backup-btn.export:hover { background: #cf9c1a; }
   margin: 10px 0 4px;
   padding: 10px 12px;
   background: rgba(15, 23, 51, 0.55);
-  border: 1px solid #1a3a8a;
+  border: 1px solid var(--border);
   border-radius: 13px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  color: #e8eaf4;
+  color: var(--text);
 }
 .profil-strip:hover { background: rgba(21, 32, 74, 0.7); }
 .profil-avatar {
@@ -1288,14 +1293,14 @@ body.theme-gold .backup-btn.export:hover { background: #cf9c1a; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0b1a4d;
-  border: 1px solid #1f47e8;
+  background: var(--card-2);
+  border: 1px solid var(--accent);
   border-radius: 12px;
   flex-shrink: 0;
 }
 .profil-teks { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .profil-nama { font-size: 15px; font-weight: 800; }
-.profil-gelar { font-size: 12px; color: #7fd0ff; font-weight: 600; }
+.profil-gelar { font-size: 12px; color: var(--sky); font-weight: 600; }
 .profil-edit { font-size: 14px; opacity: 0.6; flex-shrink: 0; }
 
 body.theme-gold .profil-avatar { border-color: #b8860b; }
@@ -1315,7 +1320,7 @@ body.theme-gold .profil-gelar { color: #e8c35a; }
 .modal-overlay.show { display: flex; }
 .modal-card {
   background: #121a33;
-  border: 1px solid #1f47e8;
+  border: 1px solid var(--accent);
   border-radius: 16px;
   padding: 20px;
   width: 100%;
@@ -1326,16 +1331,16 @@ body.theme-gold .profil-gelar { color: #e8c35a; }
 .modal-label {
   display: block;
   font-size: 12px;
-  color: #8a97c2;
+  color: var(--muted);
   font-weight: 600;
   margin: 10px 0 6px;
 }
 .modal-input {
   width: 100%;
   box-sizing: border-box;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
-  color: #e8eaf4;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-size: 15px;
   padding: 10px 12px;
   border-radius: 10px;
@@ -1349,8 +1354,8 @@ body.theme-gold .profil-gelar { color: #e8c35a; }
 .avatar-opt {
   font-size: 22px;
   aspect-ratio: 1;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   display: flex;
@@ -1359,8 +1364,8 @@ body.theme-gold .profil-gelar { color: #e8c35a; }
   padding: 0;
 }
 .avatar-opt.aktif {
-  border-color: #1f47e8;
-  background: #15204a;
+  border-color: var(--accent);
+  background: var(--card-hi);
   box-shadow: 0 0 10px rgba(31, 71, 232, 0.5);
 }
 .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
@@ -1374,14 +1379,14 @@ body.theme-gold .profil-gelar { color: #e8c35a; }
   cursor: pointer;
   font-family: inherit;
 }
-.modal-btn.batal { background: #16233f; color: #cdd6f4; border: 1px solid #1a3a8a; }
-.modal-btn.simpan { background: #1f47e8; color: #fff; }
+.modal-btn.batal { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+.modal-btn.simpan { background: var(--accent); color: #fff; }
 .modal-btn.simpan:hover { background: #2a52f0; }
 body.theme-gold .modal-btn.simpan { background: #b8860b; }
 
 
 /* ===================================================================== */
-/*  TAHAP 19 — Tab Info / Ringkasan                                      */
+/*  TAHAP 19 â€” Tab Info / Ringkasan                                      */
 /* ===================================================================== */
 .ringkas-grid {
   display: grid;
@@ -1389,19 +1394,19 @@ body.theme-gold .modal-btn.simpan { background: #b8860b; }
   gap: 10px;
 }
 .ringkas-kartu {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 13px;
   padding: 14px 8px;
   text-align: center;
 }
 .ringkas-icon { font-size: 22px; margin-bottom: 4px; }
-.ringkas-nilai { font-size: 17px; font-weight: 800; color: #e8eaf4; }
-.ringkas-label { font-size: 11px; color: #8a97c2; margin-top: 2px; }
+.ringkas-nilai { font-size: 17px; font-weight: 800; color: var(--text); }
+.ringkas-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 .ringkas-fokus-kartu {
-  background: linear-gradient(135deg, #0f1733, #15204a);
-  border: 1px solid #1f47e8;
+  background: linear-gradient(135deg, var(--card), var(--card-hi));
+  border: 1px solid var(--accent);
   border-radius: 14px;
   padding: 16px;
   box-shadow: 0 0 14px rgba(31, 71, 232, 0.25);
@@ -1411,20 +1416,20 @@ body.theme-gold .modal-btn.simpan { background: #b8860b; }
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #6f8cff;
+  color: var(--accent-3);
   margin-bottom: 6px;
 }
 .ringkas-fokus-nama { font-size: 18px; font-weight: 700; }
-.ringkas-fokus-sisa { font-size: 12px; color: #8a97c2; margin-top: 8px; }
+.ringkas-fokus-sisa { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .ringkas-done {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
   text-align: center;
   font-size: 15px;
   font-weight: 700;
-  color: #7fd0ff;
+  color: var(--sky);
 }
 
 body.theme-gold .ringkas-fokus-kartu { border-color: #b8860b; }
@@ -1432,15 +1437,17 @@ body.theme-gold .ringkas-fokus-cat { color: #e8c35a; }
 
 
 /* ===================================================================== */
-/*  BLOK A (Tahap 22-26) — onboarding, mood, kutipan, tema, statistik     */
+/*  BLOK A (Tahap 22-26) â€” onboarding, mood, kutipan, tema, statistik     */
 /* ===================================================================== */
 
 /* --- Tahap 24: Tema warna (override variabel aksen) --- */
 /* Hanya mengubah --accent & --accent-2; elemen yang pakai variabel ini
    (nav aktif, exp-fill, dll) ikut berubah. Tema biru = default :root. */
-body.tema-ungu  { --accent: #7c3aed; --accent-2: #a78bfa; }
-body.tema-hijau { --accent: #0e9f6e; --accent-2: #34d399; }
-body.tema-merah { --accent: #e02424; --accent-2: #f87171; }
+/* Tahap 37: tiap tema set SELURUH keluarga aksen + border biru-nya,
+   biar recolor-nya total (bukan cuma 2 warna). */
+body.tema-ungu  { --accent: #7c3aed; --accent-2: #a78bfa; --accent-3: #c4b5fd; --sky: #c4b5fd; --border: #3b2a66; --card-2: #241a40; --card-hi: #2e2250; }
+body.tema-hijau { --accent: #0e9f6e; --accent-2: #34d399; --accent-3: #6ee7b7; --sky: #6ee7b7; --border: #184d3a; --card-2: #0c2a1f; --card-hi: #113c2c; }
+body.tema-merah { --accent: #e02424; --accent-2: #f87171; --accent-3: #fca5a5; --sky: #fca5a5; --border: #5a1f1f; --card-2: #2e1212; --card-hi: #3c1818; }
 /* Latar radial ikut warna tema biar berpadu. */
 body.tema-ungu  { background: radial-gradient(1200px 500px at 50% -10%, rgba(124,58,237,0.14), transparent 70%), var(--bg); background-attachment: fixed; }
 body.tema-hijau { background: radial-gradient(1200px 500px at 50% -10%, rgba(14,159,110,0.14), transparent 70%), var(--bg); background-attachment: fixed; }
@@ -1451,9 +1458,9 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
   display: flex;
   align-items: center;
   gap: 7px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
-  color: #e8eaf4;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 13px;
@@ -1480,8 +1487,8 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 .mood-opt {
   flex: 1;
   font-size: 26px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 0;
   cursor: pointer;
@@ -1491,7 +1498,7 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 .mood-opt.aktif {
   filter: none;
   border-color: var(--accent);
-  background: #15204a;
+  background: var(--card-hi);
   transform: scale(1.06);
 }
 
@@ -1549,19 +1556,19 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 
 
 /* ===================================================================== */
-/*  BLOK B (Tahap 27-31) — kategori, jadwal, goals, catatan, mode terang  */
+/*  BLOK B (Tahap 27-31) â€” kategori, jadwal, goals, catatan, mode terang  */
 /* ===================================================================== */
 
 /* --- Tahap 28: Jadwal hari di form misi --- */
 .misi-jadwal-wrap { margin-top: 10px; }
-.misi-jadwal-label { font-size: 11px; color: #8a97c2; display: block; margin-bottom: 6px; }
+.misi-jadwal-label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; }
 .misi-hari { display: flex; gap: 5px; flex-wrap: wrap; }
 .hari-opt {
   flex: 1;
   min-width: 38px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
-  color: #cdd6f4;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-2);
   font-size: 11px;
   font-weight: 700;
   padding: 7px 0;
@@ -1585,9 +1592,9 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
-  color: #cdd6f4;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-2);
   font-size: 12px;
   padding: 5px 10px;
   border-radius: 20px;
@@ -1601,20 +1608,20 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 .misi-note-btn {
   background: transparent;
   border: 1px solid #2a3f6e;
-  color: #cdd6f4;
+  color: var(--text-2);
   font-size: 12px;
   width: 26px; height: 26px;
   border-radius: 7px;
   cursor: pointer;
   flex-shrink: 0;
 }
-.misi-note-btn:hover { background: #16233f; }
+.misi-note-btn:hover { background: var(--surface-2); }
 
 /* --- Tahap 29: Goals --- */
-.goals-empty { font-size: 13px; color: #8a97c2; text-align: center; padding: 10px 0; }
+.goals-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 10px 0; }
 .goal-item {
-  background: #0f1733;
-  border: 1px solid #1a3a8a;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 10px;
@@ -1622,51 +1629,40 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 .goal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .goal-nama { font-size: 14px; font-weight: 700; }
 .goal-del { background: transparent; border: none; color: #ff6b8a; font-size: 13px; cursor: pointer; }
-.goal-track { height: 9px; background: #0b1a4d; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.goal-track { height: 9px; background: var(--card-2); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
 .goal-fill { height: 100%; background: var(--accent); }
 .goal-foot { display: flex; align-items: center; justify-content: center; gap: 14px; }
 .goal-min, .goal-plus {
-  background: #16233f; border: 1px solid #1a3a8a; color: #cdd6f4;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2);
   font-size: 16px; font-weight: 700; width: 34px; height: 30px;
   border-radius: 9px; cursor: pointer;
 }
-.goal-num { font-size: 13px; color: #8a97c2; min-width: 70px; text-align: center; }
+.goal-num { font-size: 13px; color: var(--muted); min-width: 70px; text-align: center; }
 
-/* --- Tahap 31: Mode terang (flip variabel tema) --- */
+/* --- Tahap 31+37: Mode terang (flip SEMUA variabel permukaan) ---
+   Sekarang semua warna pakai variabel, jadi cukup flip di sini — gak perlu
+   override per-selector lagi. Recolor jadi total & konsisten. */
 body.mode-terang {
-  --bg:     #f4f6fc;
-  --card:   #ffffff;
-  --card-2: #eaf0ff;
-  --border: #c9d6f5;
-  --text:   #141a2e;
-  --muted:  #5a678f;
-}
-body.mode-terang {
+  --bg:        #f4f6fc;
+  --card:      #ffffff;
+  --card-2:    #eaf0ff;
+  --card-hi:   #dde7ff;
+  --surface-2: #eef2fb;
+  --border:    #c9d6f5;
+  --text:      #141a2e;
+  --text-2:    #243156;
+  --muted:     #5a678f;
+  --sky:       #1f47e8;   /* di latar terang, biru muda susah kebaca -> pakai biru pekat */
+  --accent-3:  #3a5bd0;
   background: radial-gradient(1200px 500px at 50% -10%, rgba(31,71,232,0.08), transparent 70%), var(--bg);
   background-attachment: fixed;
   color: var(--text);
 }
-/* Surface utama yang hardcoded gelap -> ikut terang pas mode terang. */
-body.mode-terang .section,
-body.mode-terang .ringkas-kartu,
-body.mode-terang .goal-item,
-body.mode-terang .mission,
-body.mode-terang .misi-edit-row,
-body.mode-terang .kat-chip,
-body.mode-terang .modal-input,
-body.mode-terang .misi-input,
-body.mode-terang .misi-select,
-body.mode-terang .misi-exp-input {
-  background: var(--card);
-  color: var(--text);
-  border-color: var(--border);
-}
 body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
-body.mode-terang .kutipan { color: var(--accent); }
 
 
 /* ===================================================================== */
-/*  BLOK C (Tahap 32-36) — animasi halus, empty state, undo, share        */
+/*  BLOK C (Tahap 32-36) â€” animasi halus, empty state, undo, share        */
 /* ===================================================================== */
 
 /* --- Tahap 32: transisi halaman lebih halus (slide-up + fade) --- */
@@ -1690,7 +1686,7 @@ body.mode-terang .kutipan { color: var(--accent); }
   padding: 20px 16px;
   text-align: center;
   font-size: 13px;
-  color: #8a97c2;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -1717,7 +1713,7 @@ body.mode-terang .kutipan { color: var(--accent); }
 
 
 /* ===================================================================== */
-/*  RESPONSIF — penyesuaian layar sempit (HP kecil)                       */
+/*  RESPONSIF â€” penyesuaian layar sempit (HP kecil)                       */
 /*  Hanya ubah jarak/penyusutan; gak menyentuh logika fitur apa pun.      */
 /* ===================================================================== */
 @media (max-width: 400px) {
