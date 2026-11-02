@@ -48,6 +48,15 @@
         </div>
       </header>
 
+      <!-- Kutipan motivasi harian (Tahap 26) -->
+      <div class="kutipan" id="kutipan-hari"></div>
+
+      <!-- Mood harian (Tahap 25) -->
+      <section class="section">
+        <h2 class="day-title" style="margin-top:0;">💭 Mood Hari Ini</h2>
+        <div class="mood-picker" id="mood-picker"></div>
+      </section>
+
       <!-- 4 Stat -->
       <section class="section">
         <h2 class="day-title" style="margin-top:0;">📊 Stat</h2>
@@ -114,6 +123,11 @@
       <section class="section">
         <div class="ringkas-fokus" id="ringkas-fokus"></div>
       </section>
+      <h1 class="page-title" style="margin-top:22px;">📈 Statistik</h1>
+      <section class="section">
+        <div class="ringkas-grid" id="statistik-grid"></div>
+        <div class="statistik-terbaik" id="statistik-terbaik"></div>
+      </section>
     </div>
 
     <!-- ============ HALAMAN: GIZI ============ -->
@@ -176,6 +190,12 @@
         </div>
       </section>
 
+      <h1 class="page-title" style="margin-top:22px;">🎨 Tema Warna</h1>
+      <section class="section">
+        <p class="jurnal-hint">Pilih warna aksen app sesuai selera.</p>
+        <div class="tema-picker" id="tema-picker"></div>
+      </section>
+
       <h1 class="page-title" style="margin-top:22px;">🔊 Suara & Getar</h1>
       <section class="section">
         <div class="reminder-row">
@@ -212,6 +232,19 @@
     <button class="nav-btn" data-page="shop"><span class="nav-ico">🛒</span><span>Shop</span></button>
     <button class="nav-btn" data-page="more"><span class="nav-ico">🏆</span><span>Lainnya</span></button>
   </nav>
+
+  <!-- Layar sambutan / onboarding (Tahap 22) — muncul sekali di awal -->
+  <div class="onboard-overlay" id="onboard">
+    <div class="onboard-card">
+      <div class="onboard-logo">ASCEND</div>
+      <div class="onboard-tagline">Naik ke versi terbaik dirimu. Satu misi tiap hari.</div>
+      <label class="modal-label">Siapa namamu?</label>
+      <input type="text" id="onboard-nama" class="modal-input" maxlength="20" placeholder="Nama kamu" />
+      <label class="modal-label">Pilih avatar</label>
+      <div class="avatar-picker" id="onboard-avatar"></div>
+      <button class="modal-btn simpan" id="onboard-mulai" style="width:100%;margin-top:18px;">Mulai Perjalanan 🚀</button>
+    </div>
+  </div>
 
   <!-- Modal edit profil (Tahap 17) -->
   <div class="modal-overlay" id="profil-modal">

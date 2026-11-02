@@ -195,6 +195,9 @@ let state = {
   reminderTanggal: "",  // tanggal terakhir reminder sudah bunyi (anti-dobel)
   profil: { nama: "Hunter", avatar: "🧑" }, // Tahap 17: nama + avatar emoji
   suaraOn: true,  // Tahap 20: bunyi + getar feedback nyala/mati
+  sudahOnboard: false, // Tahap 22: layar sambutan sudah dilewati?
+  mood: {},       // Tahap 25: mood per tanggal, mis. { "2026-11-01": "😄" }
+  tema: "blue",   // Tahap 24: tema warna pilihan (blue/ungu/hijau/merah) — terpisah dari item emas
 };
 
 
@@ -426,6 +429,9 @@ function load() {
   if (!state.profil.nama)   state.profil.nama = "Hunter";
   if (!state.profil.avatar) state.profil.avatar = "🧑";
   if (state.suaraOn === undefined) state.suaraOn = true;
+  if (state.sudahOnboard === undefined) state.sudahOnboard = false;
+  if (!state.mood) state.mood = {};
+  if (!state.tema) state.tema = "blue";
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -890,6 +896,10 @@ function buyItem(id) {
 //  7e) applyTheme()  — pasang/lepas kelas tema emas di <body>.
 // ---------------------------------------------------------------------
 function applyTheme() {
+  // Tema warna pilihan (Tahap 24): hapus semua kelas tema-*, pasang yang dipilih.
+  document.body.classList.remove("tema-blue", "tema-ungu", "tema-hijau", "tema-merah");
+  document.body.classList.add("tema-" + (state.tema || "blue"));
+  // Tema emas (item Shop) tetap jadi lapisan terpisah di atas warna pilihan.
   document.body.classList.toggle("theme-gold", state.theme === "gold");
 }
 
@@ -1028,6 +1038,9 @@ function render() {
 
   // Ringkasan hari (Tahap 19): dashboard sekilas di tab Info.
   renderRingkas();
+  renderStatistik();  // Tahap 23: statistik mendalam (tab Info)
+  renderMood();       // Tahap 25: mood harian (Home)
+  renderKutipan();    // Tahap 26: kutipan motivasi harian (Home)
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -1541,7 +1554,196 @@ setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
 setupBackup();       // sambungkan tombol export/import data
 setupProfil();       // sambungkan strip profil + modal edit
 setupSuara();        // sambungkan toggle suara & getar
+setupTema();         // Tahap 24: pilihan tema warna
+setupMood();         // Tahap 25: tombol mood harian
+setupOnboard();      // Tahap 22: layar sambutan (muncul sekali)
 render();
+
+
+// ---------------------------------------------------------------------
+//  BLOK A — Tahap 22-26
+// ---------------------------------------------------------------------
+
+// Tahap 22: ONBOARDING — layar sambutan sekali di awal.
+function setupOnboard() {
+  const ov = document.getElementById("onboard");
+  if (!ov) return;
+  if (state.sudahOnboard) { ov.classList.remove("show"); return; }
+
+  // Belum pernah onboard -> tampilkan.
+  ov.classList.add("show");
+
+  const inpNama = document.getElementById("onboard-nama");
+  const picker  = document.getElementById("onboard-avatar");
+  const btnMulai = document.getElementById("onboard-mulai");
+  let pilih = state.profil.avatar;
+
+  inpNama.value = state.profil.nama === "Hunter" ? "" : state.profil.nama;
+
+  picker.innerHTML = "";
+  AVATARS.forEach(a => {
+    const b = document.createElement("button");
+    b.className = "avatar-opt" + (a === pilih ? " aktif" : "");
+    b.textContent = a;
+    b.addEventListener("click", () => {
+      pilih = a;
+      picker.querySelectorAll(".avatar-opt").forEach(x =>
+        x.classList.toggle("aktif", x.textContent === pilih));
+    });
+    picker.appendChild(b);
+  });
+
+  btnMulai.addEventListener("click", () => {
+    const nama = inpNama.value.trim();
+    state.profil.nama = nama || "Hunter";
+    state.profil.avatar = pilih;
+    state.sudahOnboard = true;
+    save();
+    ov.classList.remove("show");
+    render();
+    toastInfo("👋 Selamat datang, " + state.profil.nama + "!");
+  });
+}
+
+
+// Tahap 24: TEMA WARNA — pilih warna aksen app.
+const TEMA_PILIHAN = [
+  { id: "blue",  nama: "Biru",  warna: "#1f47e8" },
+  { id: "ungu",  nama: "Ungu",  warna: "#7c3aed" },
+  { id: "hijau", nama: "Hijau", warna: "#0e9f6e" },
+  { id: "merah", nama: "Merah", warna: "#e02424" },
+];
+
+function setupTema() {
+  const box = document.getElementById("tema-picker");
+  if (!box) return;
+  gambarTema(box);
+}
+
+function gambarTema(box) {
+  box.innerHTML = "";
+  TEMA_PILIHAN.forEach(t => {
+    const b = document.createElement("button");
+    b.className = "tema-opt" + (state.tema === t.id ? " aktif" : "");
+    b.innerHTML = `<span class="tema-dot" style="background:${t.warna};"></span>${t.nama}`;
+    b.addEventListener("click", () => {
+      state.tema = t.id;
+      save();
+      applyTheme();
+      gambarTema(box); // gambar ulang tanda 'aktif'
+      toastInfo("🎨 Tema: " + t.nama);
+    });
+    box.appendChild(b);
+  });
+}
+
+
+// Tahap 25: MOOD HARIAN — catat 1 mood per hari.
+const MOODS = ["😄", "🙂", "😐", "😔", "😫"];
+
+function setMood(emoji) {
+  state.mood[today()] = emoji;
+  save();
+  renderMood();
+  toastInfo("Mood hari ini: " + emoji);
+}
+
+function setupMood() {
+  // Render awal; tombol dibuat ulang tiap render lewat renderMood().
+  renderMood();
+}
+
+function renderMood() {
+  const box = document.getElementById("mood-picker");
+  if (!box) return;
+  const pilih = state.mood[today()] || "";
+  box.innerHTML = "";
+  MOODS.forEach(m => {
+    const b = document.createElement("button");
+    b.className = "mood-opt" + (m === pilih ? " aktif" : "");
+    b.textContent = m;
+    b.addEventListener("click", () => setMood(m));
+    box.appendChild(b);
+  });
+}
+
+
+// Tahap 26: KUTIPAN HARIAN — 1 kutipan, dipilih dari tanggal (tetap sepanjang hari).
+const KUTIPAN = [
+  "Sedikit tiap hari, lama-lama jadi banyak.",
+  "Kamu gak harus sempurna, cukup lebih baik dari kemarin.",
+  "Disiplin adalah jembatan antara tujuan dan hasil.",
+  "Mulai aja dulu, semangat nyusul.",
+  "Tubuh dibentuk dari kebiasaan, bukan satu hari heroik.",
+  "Progres kecil tetap progres.",
+  "Hari ini susah, besok kamu berterima kasih.",
+  "Fokus ke proses, hasil ngikut.",
+  "Konsisten kalah sama sempurna? Gak. Konsisten menang.",
+  "Satu misi kelar lebih baik dari sepuluh rencana.",
+];
+
+function kutipanHariIni() {
+  // Ubah tanggal jadi angka stabil, lalu pilih indeks kutipan.
+  const t = today(); // "YYYY-MM-DD"
+  let jml = 0;
+  for (let i = 0; i < t.length; i++) jml += t.charCodeAt(i);
+  return KUTIPAN[jml % KUTIPAN.length];
+}
+
+function renderKutipan() {
+  const el = document.getElementById("kutipan-hari");
+  if (!el) return;
+  el.textContent = "\u201C" + kutipanHariIni() + "\u201D";
+}
+
+
+// Tahap 23: STATISTIK MENDALAM — angka ringkas dari data yang terkumpul.
+function renderStatistik() {
+  const box = document.getElementById("statistik-grid");
+  if (!box) return;
+
+  const hist = state.history || [];
+  const totalMisi = state.totalDone || 0;
+
+  // Rata-rata misi/hari: pakai riwayat hari yang sudah lewat + hari ini.
+  const hariTercatat = hist.length + 1; // +1 buat hari ini yang belum diarsip
+  const kelarHariIni = state.done.length;
+  const totalKelarTercatat = hist.reduce((a, h) => a + (h.kelar || 0), 0) + kelarHariIni;
+  const rataPerHari = hariTercatat > 0 ? (totalKelarTercatat / hariTercatat).toFixed(1) : "0";
+
+  // Hari paling produktif: cari entri history dengan 'kelar' terbanyak.
+  let hariTerbaik = "-";
+  let maxKelar = kelarHariIni;
+  let tglTerbaik = today();
+  hist.forEach(h => {
+    if ((h.kelar || 0) > maxKelar) { maxKelar = h.kelar; tglTerbaik = h.date; }
+  });
+  if (maxKelar > 0) hariTerbaik = maxKelar + " misi (" + tglTerbaik + ")";
+
+  const kartu = [
+    { icon: "🏅", label: "Total misi", nilai: totalMisi },
+    { icon: "📆", label: "Hari tercatat", nilai: hariTercatat },
+    { icon: "📈", label: "Rata/hari", nilai: rataPerHari },
+    { icon: "⭐", label: "Level", nilai: "Lv. " + state.level },
+    { icon: "✨", label: "EXP total", nilai: expTerkumpul() },
+    { icon: "🔥", label: "Streak", nilai: state.streak },
+  ];
+
+  box.innerHTML = "";
+  kartu.forEach(k => {
+    const el = document.createElement("div");
+    el.className = "ringkas-kartu";
+    el.innerHTML = `
+      <div class="ringkas-icon">${k.icon}</div>
+      <div class="ringkas-nilai">${k.nilai}</div>
+      <div class="ringkas-label">${k.label}</div>
+    `;
+    box.appendChild(el);
+  });
+
+  const best = document.getElementById("statistik-terbaik");
+  if (best) best.textContent = "🏆 Hari paling produktif: " + hariTerbaik;
+}
 
 
 // ---------------------------------------------------------------------
