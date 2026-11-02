@@ -1157,6 +1157,12 @@ function render() {
   const list = document.getElementById("mission-list");
   list.innerHTML = "";
 
+  // Tahap 41: empty state kalau hari ini gak ada misi sama sekali
+  // (mis. semua misi terjadwal & gak ada yang jadwalnya hari ini).
+  if (misiHariIni().length === 0) {
+    list.innerHTML = `<div class="mission-empty">🌙 Gak ada misi terjadwal hari ini. Tambah misi di "Atur Misi Sendiri".</div>`;
+  }
+
   // Gambar misi dikelompokkan per kategori. Misi terjadwal (Tahap 28) yang
   // bukan untuk hari ini disembunyikan via misiHariIni().
   kategoriAktif().forEach(cat => {

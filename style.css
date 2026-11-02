@@ -1607,7 +1607,7 @@ body.tema-merah { background: radial-gradient(1200px 500px at 50% -10%, rgba(224
 /* --- Tahap 30: tombol catatan di editor misi --- */
 .misi-note-btn {
   background: transparent;
-  border: 1px solid #2a3f6e;
+  border: 1px solid var(--border);
   color: var(--text-2);
   font-size: 12px;
   width: 26px; height: 26px;
@@ -1679,9 +1679,9 @@ body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
 }
 
 /* --- Tahap 33: empty state yang ramah --- */
-.chart-empty, .history-empty, .goals-empty {
-  background: rgba(15, 23, 51, 0.4);
-  border: 1px dashed #2a3f6e;
+.chart-empty, .history-empty, .goals-empty, .mission-empty {
+  background: var(--card);
+  border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 20px 16px;
   text-align: center;
