@@ -193,7 +193,33 @@ let state = {
   reminderOn: false,  // reminder harian nyala/mati
   reminderJam: "20:00", // jam reminder "HH:MM"
   reminderTanggal: "",  // tanggal terakhir reminder sudah bunyi (anti-dobel)
+  profil: { nama: "Hunter", avatar: "🧑" }, // Tahap 17: nama + avatar emoji
+  suaraOn: true,  // Tahap 20: bunyi + getar feedback nyala/mati
 };
+
+
+// Daftar avatar emoji yang bisa dipilih user (Tahap 17).
+const AVATARS = ["🧑", "👨", "👩", "🧔", "👤", "🦸", "🥷", "🧙", "🐺", "🦁", "🔥", "⚡"];
+
+// Gelar sesuai level (Tahap 17): makin tinggi level, makin keren gelarnya.
+// Dipilih gelar dengan 'min' tertinggi yang <= level sekarang.
+const GELAR = [
+  { min: 1,  nama: "Pemula" },
+  { min: 3,  nama: "Penempa Diri" },
+  { min: 5,  nama: "Pendaki" },
+  { min: 8,  nama: "Petarung" },
+  { min: 12, nama: "Ksatria" },
+  { min: 16, nama: "Elite" },
+  { min: 20, nama: "Monarch" },
+];
+
+function gelarSekarang() {
+  let hasil = GELAR[0].nama;
+  for (const g of GELAR) {
+    if (state.level >= g.min) hasil = g.nama;
+  }
+  return hasil;
+}
 
 
 // Langkah tambah/kurang tiap tombol gizi (biar input cepat).
@@ -396,6 +422,10 @@ function load() {
   if (state.reminderOn === undefined)   state.reminderOn = false;
   if (!state.reminderJam)               state.reminderJam = "20:00";
   if (state.reminderTanggal === undefined) state.reminderTanggal = "";
+  if (!state.profil)        state.profil = { nama: "Hunter", avatar: "🧑" };
+  if (!state.profil.nama)   state.profil.nama = "Hunter";
+  if (!state.profil.avatar) state.profil.avatar = "🧑";
+  if (state.suaraOn === undefined) state.suaraOn = true;
   // Tahap 16: daftar misi yang bisa diedit user. Pertama kali = salinan
   // default (deep copy lewat JSON biar gak nyangkut ke MISI_DEFAULT asli).
   if (!state.missions || state.missions.length === 0) {
@@ -793,7 +823,7 @@ function toggleMission(id) {
   render();
 
   // Animasi: efek "pop" di kartu yang barusan dicentang.
-  if (!sudahSelesai) animatePop(id);
+  if (!sudahSelesai) { animatePop(id); efekMisiKelar(); } // Tahap 20: bunyi + getar
   // Animasi: overlay "LEVEL UP!" kalau tadi naik level.
   if (naikLevel) animateLevelUp();
 }
@@ -877,6 +907,67 @@ function toastInfo(teks) {
 
 
 // ---------------------------------------------------------------------
+//  7g) SUARA & GETAR (Tahap 20)
+//  Nada dibikin dari kode (Web Audio API) — gak butuh file .mp3, jadi app
+//  tetap ringan. AudioContext dibuat sekali, pas dipanggil pertama kali.
+//  Kalau browser gak dukung atau toggle mati, fungsi diam aja (gak error).
+// ---------------------------------------------------------------------
+let _audioCtx = null;
+function audioCtx() {
+  if (_audioCtx) return _audioCtx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  _audioCtx = new AC();
+  return _audioCtx;
+}
+
+// Bunyikan 1 nada singkat. freq = tinggi nada (Hz), durasi dalam detik.
+function bunyiNada(freq, durasi, tipe) {
+  if (!state.suaraOn) return;
+  const ctx = audioCtx();
+  if (!ctx) return;
+  // Browser kadang "suspend" audio sampai ada interaksi; resume dulu.
+  if (ctx.state === "suspended") ctx.resume();
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = tipe || "sine";
+  osc.frequency.value = freq;
+
+  // Amplop volume: naik cepat lalu meredup, biar gak "klik" kasar.
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + durasi);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + durasi);
+}
+
+// Getar HP (kalau didukung & toggle nyala). pola = angka/array milidetik.
+function getar(pola) {
+  if (!state.suaraOn) return;
+  if (navigator.vibrate) navigator.vibrate(pola);
+}
+
+// Efek pas misi dicentang: "ting" pendek + getar singkat.
+function efekMisiKelar() {
+  bunyiNada(660, 0.12, "triangle");
+  getar(30);
+}
+
+// Efek pas naik level: 3 nada naik (arpeggio) + getar pola.
+function efekLevelUp() {
+  bunyiNada(523, 0.14, "sine");          // C5
+  setTimeout(() => bunyiNada(659, 0.14, "sine"), 110); // E5
+  setTimeout(() => bunyiNada(784, 0.22, "sine"), 220); // G5
+  getar([40, 50, 40]);
+}
+
+
+// ---------------------------------------------------------------------
 //  7b) animatePop(id) & animateLevelUp()
 //  Kasih kelas CSS sebentar lalu dicabut, biar animasinya jalan sekali.
 // ---------------------------------------------------------------------
@@ -892,6 +983,8 @@ function animateLevelUp() {
   const overlay = document.getElementById("levelup");
   const sub = document.getElementById("levelup-sub");
   const burst = document.getElementById("burst");
+
+  efekLevelUp(); // Tahap 20: bunyi arpeggio naik + getar pas level up
 
   // Tampilkan level baru di bawah teks.
   sub.textContent = "Lv. " + state.level;
@@ -929,6 +1022,12 @@ function render() {
 
   // Poin (mata uang) di header.
   document.getElementById("poin-label").textContent = "💎 " + state.poin;
+
+  // Profil (Tahap 17): avatar + nama + gelar sesuai level.
+  renderProfil();
+
+  // Ringkasan hari (Tahap 19): dashboard sekilas di tab Info.
+  renderRingkas();
 
   // Kalau Streak Freeze baru dipakai saat ganti hari, kasih tau sekali.
   if (state._freezeDipakai) {
@@ -1440,7 +1539,152 @@ setupJurnal();       // sambungkan textarea jurnal
 setupReminder();     // sambungkan setting reminder + jalankan pengecek jam
 setupMisiForm();     // sambungkan form tambah misi + tombol pulihkan default
 setupBackup();       // sambungkan tombol export/import data
+setupProfil();       // sambungkan strip profil + modal edit
+setupSuara();        // sambungkan toggle suara & getar
 render();
+
+
+// ---------------------------------------------------------------------
+//  setupSuara() (Tahap 20) — toggle bunyi/getar + bunyi tes pas dinyalain.
+// ---------------------------------------------------------------------
+function setupSuara() {
+  const t = document.getElementById("suara-toggle");
+  if (!t) return;
+  t.checked = state.suaraOn;
+  t.addEventListener("change", () => {
+    state.suaraOn = t.checked;
+    save();
+    if (state.suaraOn) efekMisiKelar(); // kasih contoh bunyi pas dinyalain
+    toastInfo(state.suaraOn ? "🔊 Suara & getar: ON" : "🔇 Suara & getar: OFF");
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  renderProfil() (Tahap 17) — gambar avatar + nama + gelar di header.
+// ---------------------------------------------------------------------
+function renderProfil() {
+  const av = document.getElementById("profil-avatar");
+  const nm = document.getElementById("profil-nama");
+  const gl = document.getElementById("profil-gelar");
+  if (!av || !nm || !gl) return;
+  av.textContent = state.profil.avatar;
+  nm.textContent = state.profil.nama;
+  gl.textContent = "Lv." + state.level + " · " + gelarSekarang();
+}
+
+
+// ---------------------------------------------------------------------
+//  renderRingkas() (Tahap 19) — tab Info: kartu ringkasan kondisi hari ini
+//  + fokus (misi terdekat yang belum kelar). Semua angka dibaca dari state,
+//  jadi selalu sinkron sama halaman lain (gak nyimpen angka ganda).
+// ---------------------------------------------------------------------
+function renderRingkas() {
+  const grid = document.getElementById("ringkas-grid");
+  if (!grid) return;
+
+  const totalMisi = misiAktif().length;
+  const kelar = state.done.length;
+
+  // Persen gizi = rata-rata 3 target (kalori, protein, air), dibatasi 100.
+  let persenGizi = 0;
+  GIZI_INFO.forEach(g => {
+    const target = state.giziTarget[g.key] || 1;
+    persenGizi += Math.min(100, (state.gizi[g.key] / target) * 100);
+  });
+  persenGizi = Math.round(persenGizi / GIZI_INFO.length);
+
+  const kartu = [
+    { icon: "🗺️", label: "Misi kelar", nilai: kelar + " / " + totalMisi },
+    { icon: "🍎", label: "Gizi", nilai: persenGizi + "%" },
+    { icon: "💎", label: "Poin", nilai: state.poin },
+    { icon: "🔥", label: "Streak", nilai: state.streak + " hari" },
+    { icon: "⭐", label: "Level", nilai: "Lv. " + state.level },
+    { icon: "⚔️", label: "Skill", nilai: state.skills.length + " / " + SKILLS.length },
+  ];
+
+  grid.innerHTML = "";
+  kartu.forEach(k => {
+    const el = document.createElement("div");
+    el.className = "ringkas-kartu";
+    el.innerHTML = `
+      <div class="ringkas-icon">${k.icon}</div>
+      <div class="ringkas-nilai">${k.nilai}</div>
+      <div class="ringkas-label">${k.label}</div>
+    `;
+    grid.appendChild(el);
+  });
+
+  // Fokus: misi pertama yang belum kelar (dorongan buat lanjut).
+  const fokus = document.getElementById("ringkas-fokus");
+  if (!fokus) return;
+  const belum = misiAktif().filter(m => !state.done.includes(m.id));
+  if (belum.length === 0) {
+    fokus.innerHTML = `<div class="ringkas-done">🎉 Semua misi hari ini kelar. Mantap!</div>`;
+  } else {
+    const m = belum[0];
+    fokus.innerHTML = `
+      <div class="ringkas-fokus-kartu">
+        <div class="ringkas-fokus-cat">${m.cat}</div>
+        <div class="ringkas-fokus-nama">${escapeHtml(m.name)}</div>
+        <div class="ringkas-fokus-sisa">Masih ada ${belum.length} misi belum kelar</div>
+      </div>
+    `;
+  }
+}
+
+
+// ---------------------------------------------------------------------
+//  setupProfil() (Tahap 17) — buka modal, isi avatar picker, simpan.
+// ---------------------------------------------------------------------
+function setupProfil() {
+  const strip   = document.getElementById("profil-strip");
+  const modal   = document.getElementById("profil-modal");
+  const inpNama = document.getElementById("profil-nama-input");
+  const picker  = document.getElementById("avatar-picker");
+  const btnBatal  = document.getElementById("profil-batal");
+  const btnSimpan = document.getElementById("profil-simpan");
+  if (!strip || !modal) return;
+
+  let pilihAvatar = state.profil.avatar; // avatar yang lagi dipilih di modal
+
+  function gambarPicker() {
+    picker.innerHTML = "";
+    AVATARS.forEach(a => {
+      const b = document.createElement("button");
+      b.className = "avatar-opt" + (a === pilihAvatar ? " aktif" : "");
+      b.textContent = a;
+      b.addEventListener("click", () => {
+        pilihAvatar = a;
+        gambarPicker(); // gambar ulang biar tanda 'aktif' pindah
+      });
+      picker.appendChild(b);
+    });
+  }
+
+  function buka() {
+    pilihAvatar = state.profil.avatar;
+    inpNama.value = state.profil.nama;
+    gambarPicker();
+    modal.classList.add("show");
+  }
+  function tutup() { modal.classList.remove("show"); }
+
+  strip.addEventListener("click", buka);
+  btnBatal.addEventListener("click", tutup);
+  // Klik area gelap di luar kartu = tutup (batal).
+  modal.addEventListener("click", e => { if (e.target === modal) tutup(); });
+
+  btnSimpan.addEventListener("click", () => {
+    const nama = inpNama.value.trim();
+    state.profil.nama = nama || "Hunter"; // kosong -> balik default
+    state.profil.avatar = pilihAvatar;
+    save();
+    render();
+    tutup();
+    toastInfo("👤 Profil disimpan!");
+  });
+}
 
 
 // ---------------------------------------------------------------------
@@ -1595,5 +1839,19 @@ function setupJurnal() {
     clearTimeout(timer);
     // Tunggu 500ms setelah ketikan terakhir baru simpan.
     timer = setTimeout(() => simpanJurnal(area.value), 500);
+  });
+}
+
+
+// ---------------------------------------------------------------------
+//  10) PWA (Tahap 21) — daftarkan service worker biar app bisa di-install
+//  di HP & jalan offline. Dibungkus try/catch + cek dukungan, jadi kalau
+//  browser lama gak dukung, app tetap jalan normal (cuma gak bisa install).
+// ---------------------------------------------------------------------
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      // Gagal daftar (mis. dibuka langsung dari file://) — diamkan, app tetap jalan.
+    });
   });
 }

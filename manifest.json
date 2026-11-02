@@ -1,0 +1,19 @@
+{
+  "name": "Ascend — Glow Up Tracker",
+  "short_name": "Ascend",
+  "description": "App gamifikasi glow-up: misi harian, EXP, level, stat, skill, dan gizi.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121217",
+  "theme_color": "#1f47e8",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
