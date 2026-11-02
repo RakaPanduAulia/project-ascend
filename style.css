@@ -1816,3 +1816,33 @@ textarea:focus-visible,
 .moodh-kolom.hari-ini { border-color: var(--accent); box-shadow: 0 0 8px rgba(31,71,232,0.3); }
 .moodh-emoji { font-size: 20px; line-height: 1.2; }
 .moodh-hari { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+
+/* ===================================================================== */
+/*  TAHAP 48 — Multi-profil                                               */
+/* ===================================================================== */
+.slot-list { display: flex; flex-direction: column; gap: 8px; }
+.slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.slot-row.aktif { border-color: var(--accent); box-shadow: 0 0 8px rgba(31,71,232,0.3); }
+.slot-nama { font-size: 14px; font-weight: 700; }
+.slot-aksi { display: flex; gap: 6px; }
+.slot-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.slot-btn.hapus { color: #ff6b8a; border-color: #5a2030; }

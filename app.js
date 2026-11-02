@@ -342,7 +342,58 @@ function expTerkumpul() {
 //  5) save() / load()  — simpan & baca state dari localStorage browser.
 // ---------------------------------------------------------------------
 function save() {
-  localStorage.setItem("ascend", JSON.stringify(state));
+  localStorage.setItem(storageKey(), JSON.stringify(state));
+}
+
+// ---------------------------------------------------------------------
+//  Tahap 48: MULTI-PROFIL
+//  Tiap profil punya data sendiri di localStorage key terpisah.
+//  Profil utama = key "ascend" (data lama kamu AMAN, gak dipindah).
+//  Profil ke-2 dst = "ascend_p<n>". Daftar & profil aktif disimpan di
+//  meta key "ascend_profiles" yang TERPISAH dari data profil.
+// ---------------------------------------------------------------------
+function bacaMetaProfil() {
+  try {
+    const m = JSON.parse(localStorage.getItem("ascend_profiles"));
+    if (m && Array.isArray(m.list) && m.aktif) return m;
+  } catch (e) {}
+  // Default: satu profil utama di key "ascend".
+  return { list: [{ key: "ascend", nama: "Utama" }], aktif: "ascend" };
+}
+function simpanMetaProfil(meta) {
+  localStorage.setItem("ascend_profiles", JSON.stringify(meta));
+}
+function storageKey() {
+  return bacaMetaProfil().aktif;
+}
+function gantiProfil(key) {
+  const meta = bacaMetaProfil();
+  if (!meta.list.some(p => p.key === key)) return;
+  meta.aktif = key;
+  simpanMetaProfil(meta);
+  location.reload(); // muat ulang -> load() baca profil baru dari awal
+}
+function tambahProfil(nama) {
+  nama = (nama || "").trim();
+  if (!nama) { toastInfo("✏️ Nama profil gak boleh kosong."); return; }
+  const meta = bacaMetaProfil();
+  if (meta.list.length >= 5) { toastInfo("Maksimal 5 profil."); return; }
+  const key = "ascend_p" + Date.now().toString(36);
+  meta.list.push({ key, nama: nama.slice(0, 20) });
+  meta.aktif = key;
+  simpanMetaProfil(meta);
+  // Profil baru belum punya data -> load() nanti bikin default fresh.
+  location.reload();
+}
+function hapusProfil(key) {
+  const meta = bacaMetaProfil();
+  if (key === "ascend") { toastInfo("Profil Utama gak bisa dihapus."); return; }
+  if (!confirm("Hapus profil ini beserta semua datanya? Gak bisa di-undo.")) return;
+  localStorage.removeItem(key);
+  meta.list = meta.list.filter(p => p.key !== key);
+  if (meta.aktif === key) meta.aktif = "ascend"; // balik ke utama
+  simpanMetaProfil(meta);
+  location.reload();
 }
 
 
@@ -399,7 +450,7 @@ function importData(file) {
       }
 
       // Tulis ke localStorage, lalu reload biar load() yang pasang & backfill.
-      localStorage.setItem("ascend", JSON.stringify(data));
+      localStorage.setItem(storageKey(), JSON.stringify(data)); // ke profil aktif
       toastInfo("📤 Data dipulihkan! Memuat ulang…");
       setTimeout(() => location.reload(), 600);
     } catch (e) {
@@ -412,7 +463,7 @@ function importData(file) {
 }
 
 function load() {
-  const saved = localStorage.getItem("ascend");
+  const saved = localStorage.getItem(storageKey()); // Tahap 48: profil aktif
   if (saved) {
     state = JSON.parse(saved);
   }
@@ -1923,6 +1974,48 @@ function setupBabakBaru() {
   if (btn) btn.addEventListener("click", mulaiBabakBaru);
 }
 
+// Tahap 48: render daftar profil + tombol ganti/hapus.
+function renderProfilSlot() {
+  const box = document.getElementById("profil-slot-list");
+  if (!box) return;
+  const meta = bacaMetaProfil();
+  box.innerHTML = "";
+  meta.list.forEach(p => {
+    const aktif = p.key === meta.aktif;
+    const row = document.createElement("div");
+    row.className = "slot-row" + (aktif ? " aktif" : "");
+    row.innerHTML = `
+      <span class="slot-nama">${escapeHtml(p.nama)}${aktif ? " ✓" : ""}</span>
+      <span class="slot-aksi"></span>
+    `;
+    const aksi = row.querySelector(".slot-aksi");
+    if (!aktif) {
+      const bGanti = document.createElement("button");
+      bGanti.className = "slot-btn"; bGanti.textContent = "Pakai";
+      bGanti.addEventListener("click", () => gantiProfil(p.key));
+      aksi.appendChild(bGanti);
+    }
+    if (p.key !== "ascend") {
+      const bHapus = document.createElement("button");
+      bHapus.className = "slot-btn hapus"; bHapus.textContent = "✕";
+      bHapus.title = "Hapus profil";
+      bHapus.addEventListener("click", () => hapusProfil(p.key));
+      aksi.appendChild(bHapus);
+    }
+    box.appendChild(row);
+  });
+}
+
+function setupProfilSlot() {
+  const btn = document.getElementById("slot-add-btn");
+  const inp = document.getElementById("slot-nama");
+  if (btn && inp) {
+    btn.addEventListener("click", () => { tambahProfil(inp.value); inp.value = ""; });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") btn.click(); });
+  }
+  renderProfilSlot();
+}
+
 
 // ---------------------------------------------------------------------
 //  BLOK C — Tahap 32-36
@@ -2649,6 +2742,7 @@ setupMode();         // Tahap 31: toggle mode gelap/terang
 setupShare();        // Tahap 35: tombol share kartu progres
 setupCariRiwayat();  // Tahap 43: kotak cari di riwayat
 setupBabakBaru();    // Tahap 47: tombol mulai babak baru
+setupProfilSlot();   // Tahap 48: daftar & tambah profil
 render();
 
 // Tahap 43: ketik di kotak cari -> gambar ulang riwayat (terfilter).
