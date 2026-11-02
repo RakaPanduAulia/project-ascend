@@ -1780,3 +1780,22 @@ body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
 @media (prefers-reduced-motion: reduce) {
   .splash-spin { animation: none; }
 }
+
+
+/* ===================================================================== */
+/*  TAHAP 40 — Aksesibilitas (fokus keyboard terlihat)                    */
+/* ===================================================================== */
+/* Outline jelas pas navigasi pakai keyboard (Tab), gak ganggu klik mouse. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.mission:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+/* Kartu misi bisa difokus & ditekan Enter/Spasi (keyboard). */
+.mission { }

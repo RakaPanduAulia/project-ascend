@@ -851,8 +851,8 @@ function renderMisiEditor() {
       row.innerHTML = `
         <div class="misi-edit-name">${escapeHtml(m.name)}${adaJadwal ? ` <span class="misi-jadwal-tag">${m.hari.map(h => HARI_LABEL[h]).join(" ")}</span>` : ""}</div>
         <div class="misi-edit-exp">+${m.exp}</div>
-        <button class="misi-note-btn" title="Catatan">📝</button>
-        <button class="misi-del" data-id="${m.id}" title="Hapus misi">✕</button>
+        <button class="misi-note-btn" title="Catatan" aria-label="Catatan untuk ${escapeHtml(m.name)}">📝</button>
+        <button class="misi-del" data-id="${m.id}" title="Hapus misi" aria-label="Hapus misi ${escapeHtml(m.name)}">✕</button>
       `;
       row.querySelector(".misi-note-btn").addEventListener("click", () => editMisiNote(m.id));
       row.querySelector(".misi-del").addEventListener("click", () => {
@@ -1173,6 +1173,12 @@ function render() {
       const card = document.createElement("div");
       card.className = "mission" + (selesai ? " done" : "");
       card.setAttribute("data-id", mission.id);
+      // Tahap 40: aksesibilitas — kartu bisa difokus & ditekan Enter/Spasi,
+      // dengan label yang jelas buat pembaca layar.
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-pressed", selesai ? "true" : "false");
+      card.setAttribute("aria-label", mission.name + (selesai ? " (selesai)" : ""));
       // Catatan per misi (Tahap 30): tampil di bawah nama kalau ada.
       const catatan = (state.misiNote && state.misiNote[mission.id]) || "";
       card.innerHTML = `
@@ -1181,6 +1187,9 @@ function render() {
         <div class="exp">+${mission.exp}</div>
       `;
       card.addEventListener("click", () => toggleMission(mission.id));
+      card.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleMission(mission.id); }
+      });
       list.appendChild(card);
     });
   });
