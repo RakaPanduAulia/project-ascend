@@ -1741,3 +1741,42 @@ body.mode-terang .navbar { background: rgba(255,255,255,0.92); }
 .page-title.sub { margin-top: 22px; }
 /* Judul pertama di dalam .section nempel ke atas kartu (gak ada jarak dobel). */
 .section > .day-title:first-child { margin-top: 0; }
+
+
+/* ===================================================================== */
+/*  TAHAP 39 — Splash / loading screen (anti-kedip saat buka app)         */
+/* ===================================================================== */
+.splash {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 400px at 50% -5%, rgba(31,71,232,0.22), transparent 70%),
+    var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 80;
+  transition: opacity 0.4s ease;
+}
+.splash.hide { opacity: 0; pointer-events: none; }
+.splash-logo {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(31,71,232,0.6);
+}
+.splash-spin {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: splash-rot 0.8s linear infinite;
+}
+@keyframes splash-rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .splash-spin { animation: none; }
+}

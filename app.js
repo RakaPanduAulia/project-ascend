@@ -2410,3 +2410,9 @@ setupGoals();        // Tahap 29: form target jangka panjang
 setupMode();         // Tahap 31: toggle mode gelap/terang
 setupShare();        // Tahap 35: tombol share kartu progres
 render();
+
+// Tahap 39: sembunyikan splash begitu render pertama selesai (anti-kedip).
+(function sembunyikanSplash() {
+  const sp = document.getElementById("splash");
+  if (sp) setTimeout(() => sp.classList.add("hide"), 250);
+})();
